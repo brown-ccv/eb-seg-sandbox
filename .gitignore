@@ -1,0 +1,6 @@
+output
+*.tif
+.vscode/
+.*env*/
+*.egg-info/
+*.txt
