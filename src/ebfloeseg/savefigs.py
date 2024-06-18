@@ -30,7 +30,8 @@ def imsave(
 
         if as_uint8:
             img = img.astype(rasterio.uint8)
-
+            
+        fname = f"{doy}{fname}"
         _filename = Path(save_direc) / fname
         with rasterio.open(_filename, "w", **profile) as dst:
-            dst.write(img)
+            dst.write(img, 1)
