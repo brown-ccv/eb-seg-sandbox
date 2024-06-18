@@ -1,7 +1,11 @@
 from datetime import datetime
 
-import numpy as np
-from numpy.typing import NDArray
+import matplotlib.pyplot as plt
+
+def imshow(img, cmap="gray"):
+    plt.imshow(img, cmap=cmap)
+    plt.axis("off")
+    plt.show()
 
 def getdoy(fname: str) -> str:
     return fname.split("_")[-2].zfill(3)
