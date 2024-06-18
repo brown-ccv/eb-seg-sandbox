@@ -49,8 +49,7 @@ def getres(doy: str, year: str) -> str:
 assert getres("214", "2012") == "2012-08-01"
 assert getres("217", "2012") == "2012-08-04"
 
-def write_mask_values(land_mask, cloud_mask, ice_mask, doy, year, save_direc):
-    lmd = land_mask + cloud_mask
+def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
     land_cloud_mask_sum = sum(sum(~(lmd)))
     fname = save_direc + str(doy) + "mask_values_" + str(year) + ".txt"
     ice_mask_sum = sum(sum(ice_mask))
