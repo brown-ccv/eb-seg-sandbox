@@ -4,3 +4,5 @@ output
 .*env*/
 *.egg-info/
 *.txt
+src/ebfloeseg/__pycache__/
+tests/__pycache__/
