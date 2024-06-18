@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import matplotlib.pyplot as plt
+import skimage
 
 def imshow(img, cmap="gray"):
     plt.imshow(img, cmap=cmap)
@@ -57,3 +58,21 @@ def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
     towrite = f"{doy}\t{ice_mask_sum}\t{land_cloud_mask_sum}\t{ratio}\n"
     with open(fname, "a") as f:
         f.write(towrite)
+
+def get_region_properties(img, red_c):
+    props = skimage.measure.regionprops_table(
+        img.astype(int),
+        red_c,
+        properties=[
+            "label",
+            "area",
+            "centroid",
+            "axis_major_length",
+            "axis_minor_length",
+            "orientation",
+            "perimeter",
+            "intensity_mean",
+        ],
+    )
+    return props
+
