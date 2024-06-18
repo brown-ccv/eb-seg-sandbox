@@ -130,7 +130,7 @@ test = [
 # If there are data files included in your packages that need to be
 # installed, specify them here.
 # TODO: ADD ANY DATA FILES WE WANT TO HAVE
-package-data = {"ebfloeseg" = ["config/*.json"]}
+# package-data = {"ebfloeseg" = ["config/*.json"]}
 
 [tool.setuptools.packages.find]
 where = ["src"]
