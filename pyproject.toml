@@ -85,6 +85,7 @@ dependencies = [ # Optional
   "scikit-image >=0.23.0, <1.0.0",
   "scipy >=1.13, <2.0.0",
   "opencv-python >=4.9, <5.0.0",
+  "imagecodecs==2024.6.1" # for viewing tif files with matplotlib
 ]
 
 [project.optional-dependencies] # Optional
