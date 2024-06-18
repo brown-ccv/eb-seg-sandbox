@@ -6,6 +6,7 @@ import rasterio
 from rasterio import DatasetReader
 from numpy.typing import NDArray
 
+
 def imsave(
     tci: DatasetReader,
     img: NDArray,
@@ -19,19 +20,16 @@ def imsave(
 ) -> None:
     with rasterio.Env():
         profile = tci.profile
-        profile.update(
-            dtype=rasterio.uint8,
-            count=count,
-            compress=compress,
-        )
+        profile.update(dtype=rasterio.uint8, count=count, compress="lzw")
 
-        if rollaxis:
-            img = np.rollaxis(img, axis=2)
+        fname = f"{save_direc}{doy}{fname}"
+        with rasterio.open(fname, "w", **profile) as dst:
+            if rollaxis:
+                img = np.rollaxis(img, axis=2)
+                dst.write(img)
+                return
 
-        if as_uint8:
-            img = img.astype(rasterio.uint8)
-            
-        fname = f"{doy}{fname}"
-        _filename = Path(save_direc) / fname
-        with rasterio.open(_filename, "w", **profile) as dst:
-            dst.write(img, 1)
+            if as_uint8:
+                img = img.astype(np.uint8)
+                dst.write(img, 1)
+                return
