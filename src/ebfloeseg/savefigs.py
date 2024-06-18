@@ -17,12 +17,14 @@ def imsave(
     compress: str = "lzw",
     rollaxis: bool = True,
     as_uint8: bool = False,
+    res = None
 ) -> None:
     with rasterio.Env():
         profile = tci.profile
         profile.update(dtype=rasterio.uint8, count=count, compress="lzw")
 
-        fname = f"{save_direc}{doy}{fname}"
+        fname = f"{save_direc}{res}_{doy}_{fname}" if res else f"{save_direc}{doy}{fname}"
+
         with rasterio.open(fname, "w", **profile) as dst:
             if rollaxis:
                 img = np.rollaxis(img, axis=2)
