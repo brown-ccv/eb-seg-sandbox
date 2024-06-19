@@ -23,7 +23,10 @@ def imsave(
         profile = tci.profile
         profile.update(dtype=rasterio.uint8, count=count, compress="lzw")
 
-        fname = f"{save_direc}{res}_{doy}_{fname}" if res else f"{save_direc}{doy}{fname}"
+        if res:
+            fname = save_direc / f"{res}_{doy}_{fname}"
+        else:
+            fname = save_direc / fname
 
         with rasterio.open(fname, "w", **profile) as dst:
             if rollaxis:
