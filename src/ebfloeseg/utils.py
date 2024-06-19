@@ -52,7 +52,7 @@ assert getres("217", "2012") == "2012-08-04"
 
 def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
     land_cloud_mask_sum = sum(sum(~(lmd)))
-    fname = save_direc + str(doy) + "mask_values_" + str(year) + ".txt"
+    fname = save_direc / f"mask_values_{year}.txt"
     ice_mask_sum = sum(sum(ice_mask))
     ratio = ice_mask_sum / land_cloud_mask_sum
     towrite = f"{doy}\t{ice_mask_sum}\t{land_cloud_mask_sum}\t{ratio}\n"
