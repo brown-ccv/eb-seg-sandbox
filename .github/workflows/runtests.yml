@@ -33,3 +33,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Test CLI command
+      run: |
+        ebprocess --help
