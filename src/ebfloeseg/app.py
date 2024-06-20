@@ -210,8 +210,6 @@ def process_images(
     ftcis = sorted(os.listdir(ftci_direc))
     fclouds = sorted(os.listdir(fcloud_direc))
 
-
-
     with ProcessPoolExecutor() as executor:
         executor.map(
             process,
