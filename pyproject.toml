@@ -95,6 +95,7 @@ dev = [
   "ipython",
   "ptpython",
   "ipykernel",
+  "nb-clean",
   "ebfloeseg[test]"
 ]
 test = [
@@ -121,8 +122,7 @@ test = [
 # The following would provide a command line executable called `sample`
 # which executes the function `main` from this package when invoked.
 [project.scripts]  # Optional
-#TODO: ADD ANY SCRIPTS WE WANT TO HAVE
-# mycommand = "ebfloeseg.module:load_file_app"
+ebproc = "ebfloeseg.app:app" # TODO: choose better name?
 
 
 # This is configuration specific to the `setuptools` build backend.
