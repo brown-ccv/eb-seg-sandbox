@@ -1,5 +1,5 @@
+from unittest.mock import patch
 import numpy as np
-import rasterio
 from numpy.testing import assert_array_equal
 from ebfloeseg.masking import mask_image, create_land_mask, create_cloud_mask, maskrgb
 
@@ -29,7 +29,7 @@ def test_mask_image():
             ]
         )
     )
-    assert np.allclose(img, arr)
+    assert np.array_equal(img, arr)
 
 
 expected_mask = np.array(
@@ -51,10 +51,8 @@ def test_create_land_mask():
         def read(self):
             return [self.land_mask]
 
-    rasterio.open = MockRasterioOpen
-
-    # Call the create_land_mask function
-    result = create_land_mask("dummy_file")
+    with patch("rasterio.open", new=MockRasterioOpen):
+        result = create_land_mask("dummy_file")
 
     # Assert the result
     assert_array_equal(result, expected_mask)
@@ -70,10 +68,8 @@ def test_create_cloud_mask():
         def read(self):
             return [self.cloud_mask]
 
-    rasterio.open = MockRasterioOpen
-
-    # Call the create_cloud_mask function
-    result = create_cloud_mask("dummy_file")
+    with patch("rasterio.open", new=MockRasterioOpen):
+        result = create_cloud_mask("dummy_file")
 
     # Assert the result
     assert_array_equal(result, expected_mask)
