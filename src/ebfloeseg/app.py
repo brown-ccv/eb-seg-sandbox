@@ -2,8 +2,8 @@
 
 from pathlib import Path
 import os
-from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor
+
 
 import rasterio
 import pandas as pd
@@ -21,6 +21,7 @@ from ebfloeseg.peakdet import peakdet
 from ebfloeseg.utils import getmeta, getres, write_mask_values, get_region_properties
 from ebfloeseg.masking import maskrgb, create_cloud_mask, create_land_mask, mask_image
 from ebfloeseg.savefigs import imsave
+
 
 def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_mask):
 
@@ -60,7 +61,9 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
 
     ow_cut_min = 100 if ~np.any(rmintab) else rbins[rmintab[-1, 0]]
 
-    ow_cut_max_cond = np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))  # TODO: add comment
+    ow_cut_max_cond = np.where(
+        (rbins[:-1] < rmax_n) & (rn <= rhm_high)
+    )  # TODO: add comment
     if np.any(ow_cut_max_cond):
         ow_cut_max = rbins[ow_cut_max_cond[0][-1]]  # fwhm to left of ice max
     else:
@@ -108,10 +111,14 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
 
     for r, it in enumerate(np.arange(8, 2, -1)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, kernel_er1, iterations=it).astype(np.uint8)
+        eroded_ice_mask = cv2.erode(inpuint8, kernel_er1, iterations=it).astype(
+            np.uint8
+        )
         eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
 
-        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er1, iterations=it).astype(np.uint8)
+        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er1, iterations=it).astype(
+            np.uint8
+        )
 
         # label floes remaining after erosion
         ret, markers = cv2.connectedComponents(eroded_ice_mask)
@@ -139,7 +146,9 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
 
         # get rid of ones that are too small
         area_lim = (it) ** 4
-        props = skimage.measure.regionprops_table(watershed, properties=["label", "area"])
+        props = skimage.measure.regionprops_table(
+            watershed, properties=["label", "area"]
+        )
         df = pd.DataFrame.from_dict(props)
         watershed[np.isin(watershed, df[df.area < area_lim].label.values)] = 1
 
@@ -182,9 +191,11 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
         res=res
     )
 
+
 app = typer.Typer()
 
-@app.command()
+
+@app.command(name="process_images")
 def process_images(
     data_direc, save_figs, save_direc, land
 ):
@@ -209,6 +220,7 @@ def process_images(
             [save_direc] * len(ftcis),
             [land_mask] * len(fclouds),
         )
+
 
 if __name__ == "__main__":
     app()
