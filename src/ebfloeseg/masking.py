@@ -32,17 +32,3 @@ def create_cloud_mask(cloud_file: Path) -> NDArray[np.bool_]:
 def maskrgb(rgb, mask):
     for i in range(rgb.shape[2]):
         mask_image(rgb[:, :, i], mask)
-
-
-def create_rgb_masked(
-    red_c: NDArray[np.uint8],
-    green_c: NDArray[np.uint8],
-    blue_c: NDArray[np.uint8],
-    mask: NDArray[np.bool_],
-) -> NDArray[np.uint8]:
-
-    rgb = np.dstack([red_c, green_c, blue_c])
-
-    maskrgb(rgb, mask)
-
-    return rgb
