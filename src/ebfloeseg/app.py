@@ -188,7 +188,7 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
         count=1,
         rollaxis=False,
         as_uint8=True,
-        res=res
+        res=res,
     )
 
 
