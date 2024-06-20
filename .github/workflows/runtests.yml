@@ -35,4 +35,4 @@ jobs:
         pytest
     - name: Test CLI command
       run: |
-        ebprocess --help
+        ebproc --help
