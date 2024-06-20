@@ -195,7 +195,7 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
 help = "TODO: add description"
 name = "ebprog"
 epilog = "Example: ebprog process_images --data_direc /path/to/data --save_figs --save_direc /path/to/save --land /path/to/landmask"
-app = typer.Typer(name=name, help=help, epilog=epilog)
+app = typer.Typer(name=name, help=help, epilog=epilog, add_completion=False)
 
 
 @app.command(name="process_images")
