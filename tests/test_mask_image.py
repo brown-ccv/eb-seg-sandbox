@@ -78,13 +78,12 @@ def test_create_cloud_mask():
     # Assert the result
     assert_array_equal(result, expected_mask)
 
+
 def test_maskrgb():
     # Create a dummy RGB image
     rgb = np.full((3, 3, 3), 255, dtype=np.uint8)
     # Create a dummy mask
-    mask = np.array(
-        [[False, False, True], [False, True, False], [True, False, False]]
-    )
+    mask = np.array([[False, False, True], [False, True, False], [True, False, False]])
     # Call the maskrgb function
     maskrgb(rgb, mask)
     # Define the expected result
@@ -92,4 +91,3 @@ def test_maskrgb():
 
     # Assert the result
     assert_array_equal(rgb, expected_result)
-    

@@ -33,4 +33,3 @@ def test_peakdet():
     delta = -1
     with pytest.raises(ValueError):
         peakdet(v, delta)
-    

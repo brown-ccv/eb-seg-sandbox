@@ -62,6 +62,7 @@ def test_get_region_properties():
     assert "area" in props
     assert "centroid-0" in props
 
+
 def test_imshow():
     img = np.random.choice([False, True], size=(10, 10))
     imshow(img)
