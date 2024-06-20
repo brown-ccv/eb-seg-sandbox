@@ -6,6 +6,7 @@ import numpy as np
 
 from ebfloeseg.savefigs import imsave
 
+
 def test_imsave():
     tci = rasterio.open("tests/input/tci/tci_2012-08-01_214_terra.tiff")
 
@@ -22,7 +23,16 @@ def test_imsave():
     assert Path(temp.name).joinpath("res_doy_fnameres").exists()
 
     # test with as_uint8
-    imsave(tci, img[:,:, 1], Path(temp.name), "doy", "fnameuint8", count=1, as_uint8=True, rollaxis=False)
+    imsave(
+        tci,
+        img[:, :, 1],
+        Path(temp.name),
+        "doy",
+        "fnameuint8",
+        count=1,
+        as_uint8=True,
+        rollaxis=False,
+    )
     assert Path(temp.name).joinpath("fnameuint8").exists()
 
     temp.cleanup()
