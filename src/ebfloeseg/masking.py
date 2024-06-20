@@ -4,6 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 import rasterio
 
+
 def mask_image(img: NDArray, mask: NDArray, val=0) -> NDArray:
     img[mask] = val
 
@@ -11,6 +12,7 @@ def mask_image(img: NDArray, mask: NDArray, val=0) -> NDArray:
 def create_land_mask(lmfile: str) -> NDArray[np.bool_]:
     s = rasterio.open(lmfile)
     return (s.read()[0]) == 75
+
 
 def create_cloud_mask(cloud_file: Path) -> NDArray[np.bool_]:
     """

@@ -1,5 +1,6 @@
 from ebfloeseg.peakdet import peakdet
 
+
 def test_peakdet():
     v = [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0]
     delta = 1
@@ -13,5 +14,5 @@ def test_peakdet():
     v = [0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0]
     delta = 2
     peaks, valleys = peakdet(v, delta)
-    assert [tuple(x) for x in peaks] == [(5,3), (7, 4), (9, 5)]
-    assert [tuple(x) for x in valleys]== [(6, 0), (8, 0)]
+    assert [tuple(x) for x in peaks] == [(5, 3), (7, 4), (9, 5)]
+    assert [tuple(x) for x in valleys] == [(6, 0), (8, 0)]

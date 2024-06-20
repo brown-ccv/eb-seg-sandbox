@@ -3,10 +3,12 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import skimage
 
+
 def imshow(img, cmap="gray"):
     plt.imshow(img, cmap=cmap)
     plt.axis("off")
     plt.show()
+
 
 def getdoy(fname: str) -> str:
     return fname.split("_")[-2].zfill(3)
@@ -47,8 +49,10 @@ assert getmeta(f2) == ("217", "2012", "terra")
 def getres(doy: str, year: str) -> str:
     return datetime.strptime(year + "-" + doy, "%Y-%j").strftime("%Y-%m-%d")
 
+
 assert getres("214", "2012") == "2012-08-01"
 assert getres("217", "2012") == "2012-08-04"
+
 
 def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
     land_cloud_mask_sum = sum(sum(~(lmd)))
@@ -58,6 +62,7 @@ def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
     towrite = f"{doy}\t{ice_mask_sum}\t{land_cloud_mask_sum}\t{ratio}\n"
     with open(fname, "a") as f:
         f.write(towrite)
+
 
 def get_region_properties(img, red_c):
     props = skimage.measure.regionprops_table(
@@ -75,4 +80,3 @@ def get_region_properties(img, red_c):
         ],
     )
     return props
-

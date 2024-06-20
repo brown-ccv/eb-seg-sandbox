@@ -17,7 +17,7 @@ def imsave(
     compress: str = "lzw",
     rollaxis: bool = True,
     as_uint8: bool = False,
-    res = None
+    res=None,
 ) -> None:
     with rasterio.Env():
         profile = tci.profile

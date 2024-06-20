@@ -1,6 +1,6 @@
-
 import numpy as np
 from ebfloeseg.masking import mask_image
+
 
 def test_mask_image():
     img = np.ones((5, 5))
@@ -28,4 +28,3 @@ def test_mask_image():
         )
     )
     assert np.allclose(img, arr)
-    

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def peakdet(v, delta, x=None):
     """
     Detects peaks and valleys in a given input vector.
