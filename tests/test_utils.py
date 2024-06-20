@@ -1,11 +1,7 @@
 from ebfloeseg.utils import *
-import os
 import numpy as np
 import tempfile
 from pathlib import Path
-import numpy as np
-import tempfile
-import os
 
 f1 = "cloud_2012-08-01_214_terra.tiff"
 f2 = "tci_2013-08-04_217_terra.tiff"
@@ -65,3 +61,8 @@ def test_get_region_properties():
     assert "label" in props
     assert "area" in props
     assert "centroid-0" in props
+
+def test_imshow():
+    img = np.random.choice([False, True], size=(10, 10))
+    imshow(img)
+    assert True
