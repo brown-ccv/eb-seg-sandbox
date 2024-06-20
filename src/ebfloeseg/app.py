@@ -197,7 +197,10 @@ app = typer.Typer()
 
 @app.command(name="process_images")
 def process_images(
-    data_direc, save_figs, save_direc, land
+    data_direc: Path = typer.Option(..., help="The directory containing the data"),
+    save_figs: bool = typer.Option(False, help="Whether to save figures"),
+    save_direc: Path = typer.Option(..., help="The directory to save figures"),
+    land: Path = typer.Option(..., help="The land mask to use"),
 ):
 
     ftci_direc: Path = data_direc / "tci"
