@@ -98,7 +98,7 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
         )
 
     # here dialating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    kernel = diamond(10)  # np.ones((3,3), np.uint8)
+    kernel = diamond(10)
     lmd = binary_dilation(lmd.astype(int), kernel)
 
     # setting up different kernel for erosion-expansion algo
