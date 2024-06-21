@@ -19,22 +19,24 @@ def imsave(
     as_uint8: bool = False,
     res=None,
 ) -> None:
-    with rasterio.Env():
-        profile = tci.profile
-        profile.update(dtype=rasterio.uint8, count=count, compress="lzw")
+    profile = tci.profile
+    profile.update(
+        dtype=rasterio.uint8,  # sample images are uint8; might not be needed? CP
+        count=count,
+        compress="lzw",
+    )
 
-        if res:
-            fname = save_direc / f"{res}_{doy}_{fname}"
-        else:
-            fname = save_direc / fname
+    if res:
+        fname = save_direc / f"{res}_{doy}_{fname}"
+    else:
+        fname = save_direc / fname
 
-        with rasterio.open(fname, "w", **profile) as dst:
-            if rollaxis:
-                img = np.rollaxis(img, axis=2)
-                dst.write(img)
-                return
+    with rasterio.open(fname, "w", **profile) as dst:
+        if rollaxis:
+            img = np.rollaxis(img, axis=2)
+            dst.write(img)
+            return
 
-            if as_uint8:
-                img = img.astype(np.uint8)
-                dst.write(img, 1)
-                return
+        if as_uint8:
+            img = img.astype(np.uint8)
+            dst.write(img, 1)
