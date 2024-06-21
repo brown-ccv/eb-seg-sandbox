@@ -54,9 +54,9 @@ def test_write_mask_values():
 
 
 def test_get_region_properties():
-    img = np.random.choice([False, True], size=(3, 3))
+    img = np.ones((3, 3))
     red_c = np.ones((3, 3))
-    props = get_region_properties(img.astype(int), red_c.astype(int))
+    props = get_region_properties(img, red_c)
     assert "label" in props
     assert "area" in props
     assert "centroid-0" in props
