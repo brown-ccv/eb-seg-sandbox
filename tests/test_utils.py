@@ -48,16 +48,15 @@ def test_write_mask_values():
             year,
             save_direc,
         )
-        assert (save_direc / "mask_values_2012.txt").exists()
 
         with open(save_direc / "mask_values_2012.txt", "r") as f:
             assert f.readline() == "214\t9\t-18\t-0.5\n"
 
 
 def test_get_region_properties():
-    img = np.random.choice([False, True], size=(3, 3))
+    img = np.ones((3, 3))
     red_c = np.ones((3, 3))
-    props = get_region_properties(img.astype(int), red_c.astype(int))
+    props = get_region_properties(img, red_c)
     assert "label" in props
     assert "area" in props
     assert "centroid-0" in props
