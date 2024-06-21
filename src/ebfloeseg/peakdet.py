@@ -40,13 +40,13 @@ def peakdet(v: ArrayLike, delta: float) -> tuple[np.ndarray, np.ndarray]:
             mnpos = i
 
         if lookformax:
-            if this < mx - delta:
+            if this < mx - delta: # is local max?
                 maxtab.append((mxpos, mx))
                 mn = this
                 mnpos = i
                 lookformax = False
-        else:
-            if this > mn + delta:
+        else: # look for min
+            if this > mn + delta: # is local min?
                 mintab.append((mnpos, mn))
                 mx = this
                 mxpos = i
