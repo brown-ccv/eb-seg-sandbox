@@ -35,7 +35,7 @@ def peakdet(v, delta, x=None):
         raise ValueError("Input argument delta must be positive")
 
     mn, mx = np.Inf, -np.Inf
-    mnpos, mxpos = np.NaN, np.NaN
+    #mnpos, mxpos = np.NaN, np.NaN
 
     lookformax = True
     maxtab = []
