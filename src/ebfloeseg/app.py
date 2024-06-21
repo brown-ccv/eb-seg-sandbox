@@ -55,7 +55,7 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
     binz = np.arange(1, 256, 5)
     rn, rbins = np.histogram(red_masked.flatten(), bins=binz)
     dx = 0.01 * np.mean(rn)
-    rmaxtab, rmintab = peakdet(rn, dx, x=None)
+    rmaxtab, rmintab = peakdet(rn, dx)
     rmax_n = rbins[rmaxtab[-1, 0]]
     rhm_high = rmaxtab[-1, 1] / 2
 
