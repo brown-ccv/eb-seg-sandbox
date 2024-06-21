@@ -48,7 +48,6 @@ def test_write_mask_values():
             year,
             save_direc,
         )
-        assert (save_direc / "mask_values_2012.txt").exists()
 
         with open(save_direc / "mask_values_2012.txt", "r") as f:
             assert f.readline() == "214\t9\t-18\t-0.5\n"
