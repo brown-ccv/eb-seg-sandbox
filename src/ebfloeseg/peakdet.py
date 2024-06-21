@@ -1,7 +1,8 @@
 import numpy as np
+from numpy.typing import ArrayLike
 
 
-def peakdet(v, delta, x=None):
+def peakdet(v: ArrayLike, delta: float) -> tuple[np.ndarray, np.ndarray]:
     """
     Detects peaks and valleys in a given input vector.
 
