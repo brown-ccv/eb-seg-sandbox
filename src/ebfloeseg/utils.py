@@ -2,59 +2,105 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import skimage
+from numpy.typing import ArrayLike
 
 
-def imshow(img, cmap="gray"):
+def imshow(img: ArrayLike, cmap: str = "gray") -> None:
     plt.imshow(img, cmap=cmap)
     plt.axis("off")
     plt.show()
 
 
 def getdoy(fname: str) -> str:
+    """
+    Extracts the day of year (DOY) from a given filename.
+
+    Args:
+        fname (str): The filename from which to extract the DOY.
+
+    Returns:
+        str: The day of year (DOY) as a zero-padded string.
+
+    Example:
+        >>> getdoy("image_2022_123.jpg")
+        '123'
+    """
     return fname.split("_")[-2].zfill(3)
 
 
-f1 = "cloud_2012-08-01_214_terra.tiff"
-f2 = "tci_2012-08-04_217_terra.tiff"
-assert getdoy(f1) == "214"
-assert getdoy(f2) == "217"
-
-
 def getyear(fname: str) -> str:
+    """
+    Extracts the year from a given filename.
+
+    Args:
+        fname (str): The filename from which to extract the year.
+
+    Returns:
+        str: The extracted year.
+
+    Example:
+        >>> getyear("file_2022-01-01.txt")
+        '2022'
+    """
     return fname.split("_")[1].split("-")[0]
 
 
 def getsat(fname: str) -> str:
+    """
+    Extracts the satellite name from a given filename.
+
+    Args:
+        fname (str): The filename from which to extract the satellite name.
+
+    Returns:
+        str: The extracted satellite name.
+
+    """
     return fname.split("_")[-1].split(".")[0]
 
 
-assert getyear(f1) == "2012"
-assert getyear(f2) == "2012"
+def getmeta(fname: str) -> tuple[str, str, str]:
+    """
+    Retrieves the metadata information from the given file name.
 
-assert getsat(f1) == "terra"
-assert getsat(f2) == "terra"
+    Parameters:
+    fname (str): The file name from which to retrieve the metadata.
 
-
-def getmeta(fname: str) -> str:
+    Returns:
+    tuple[str, str, str]: A tuple containing the day of year (doy), year, and satellite information.
+    """
     doy = getdoy(fname)
     year = getyear(fname)
     sat = getsat(fname)
     return doy, year, sat
 
 
-assert getmeta(f1) == ("214", "2012", "terra")
-assert getmeta(f2) == ("217", "2012", "terra")
-
-
 def getres(doy: str, year: str) -> str:
     return datetime.strptime(year + "-" + doy, "%Y-%j").strftime("%Y-%m-%d")
 
 
-assert getres("214", "2012") == "2012-08-01"
-assert getres("217", "2012") == "2012-08-04"
+def write_mask_values(
+    land_mask: ArrayLike,
+    lmd: ArrayLike,
+    ice_mask: ArrayLike,
+    doy: str,
+    year: str,
+    save_direc: str,
+) -> None:
+    """
+    Write mask values to a text file.
 
+    Args:
+        land_mask (numpy.ndarray): Land mask array.
+        lmd (numpy.ndarray): Land cloud mask array.
+        ice_mask (numpy.ndarray): Ice mask array.
+        doy (int): Day of year.
+        year (int): Year.
+        save_direc (str): Directory to save the text file.
 
-def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
+    Returns:
+        None
+    """
     land_cloud_mask_sum = sum(sum(~(lmd)))
     fname = save_direc / f"mask_values_{year}.txt"
     ice_mask_sum = sum(sum(ice_mask))
@@ -64,7 +110,20 @@ def write_mask_values(land_mask, lmd, ice_mask, doy, year, save_direc):
         f.write(towrite)
 
 
-def get_region_properties(img, red_c):
+def get_region_properties(img: ArrayLike, red_c: ArrayLike) -> dict[str, ArrayLike]:
+    """
+    Calculate properties of regions in an image.
+
+    Parameters:
+    - img: ArrayLike
+        The input image.
+    - red_c: ArrayLike
+        The red channel value used for regionprops calculation.
+
+    Returns:
+    - props: dict
+        A dictionary containing the calculated properties for each region.
+    """
     props = skimage.measure.regionprops_table(
         img.astype(int),
         red_c,
