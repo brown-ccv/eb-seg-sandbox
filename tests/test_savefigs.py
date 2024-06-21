@@ -8,31 +8,30 @@ from ebfloeseg.savefigs import imsave
 
 
 def test_imsave():
-    tci = rasterio.open("tests/input/tci/tci_2012-08-01_214_terra.tiff")
+    with rasterio.open("tests/input/tci/tci_2012-08-01_214_terra.tiff") as tci:
 
-    img = np.dstack(tci.read()[:])
+        img = np.dstack(tci.read()[:])
 
-    temp = TemporaryDirectory()
+        with TemporaryDirectory() as temp:
+            t = Path(temp)
 
-    # test without res provided
-    imsave(tci, img, Path(temp.name), "doy", "fname", count=3)
-    assert Path(temp.name).joinpath("fname").exists()
+            # test without res provided
+            imsave(tci, img, t, "doy", "fname", count=3)
+            assert t.joinpath("fname").exists()
 
-    # test with res provided
-    imsave(tci, img, Path(temp.name), "doy", "fnameres", count=3, res="res")
-    assert Path(temp.name).joinpath("res_doy_fnameres").exists()
+            # test with res provided
+            imsave(tci, img, t, "doy", "fnameres", count=3, res="res")
+            assert t.joinpath("res_doy_fnameres").exists()
 
-    # test with as_uint8
-    imsave(
-        tci,
-        img[:, :, 1],
-        Path(temp.name),
-        "doy",
-        "fnameuint8",
-        count=1,
-        as_uint8=True,
-        rollaxis=False,
-    )
-    assert Path(temp.name).joinpath("fnameuint8").exists()
-
-    temp.cleanup()
+            # test with as_uint8
+            imsave(
+                tci,
+                img[:, :, 1],
+                t,
+                "doy",
+                "fnameuint8",
+                count=1,
+                as_uint8=True,
+                rollaxis=False,
+            )
+            assert t.joinpath("fnameuint8").exists()
