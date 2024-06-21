@@ -34,9 +34,9 @@ def test_getres():
 
 def test_write_mask_values():
     with tempfile.TemporaryDirectory() as temp_dir:
-        land_mask = np.ones((10, 10))
-        lmd = np.ones((10, 10))
-        ice_mask = np.ones((10, 10))
+        land_mask = np.ones((3, 3))
+        lmd = np.ones((3, 3))
+        ice_mask = np.ones((3, 3))
         doy = "214"
         year = "2012"
         save_direc = Path(temp_dir)
@@ -49,14 +49,14 @@ def test_write_mask_values():
             save_direc,
         )
         assert (save_direc / "mask_values_2012.txt").exists()
+
         with open(save_direc / "mask_values_2012.txt", "r") as f:
-            assert f.readline() == "214\t100\t-200\t-0.5\n"
+            assert f.readline() == "214\t9\t-18\t-0.5\n"
 
 
 def test_get_region_properties():
-    np.random.seed(42)
-    img = np.random.choice([False, True], size=(10, 10))
-    red_c = np.ones((10, 10))
+    img = np.random.choice([False, True], size=(3, 3))
+    red_c = np.ones((3, 3))
     props = get_region_properties(img.astype(int), red_c.astype(int))
     assert "label" in props
     assert "area" in props
@@ -64,6 +64,6 @@ def test_get_region_properties():
 
 
 def test_imshow():
-    img = np.random.choice([False, True], size=(10, 10))
+    img = np.random.choice([False, True], size=(1, 1))
     imshow(img)
     assert True
