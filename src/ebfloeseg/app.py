@@ -244,20 +244,23 @@ def process_images(
 
     ftcis = sorted(os.listdir(ftci_direc))
     fclouds = sorted(os.listdir(fcloud_direc))
+    m = len(fclouds)
 
     with ProcessPoolExecutor() as executor:
         executor.map(
             process,
             fclouds,
             ftcis,
-            [fcloud_direc] * len(fclouds),
-            [ftci_direc] * len(ftcis),
-            [save_figs] * len(fclouds),
-            [save_direc] * len(ftcis),
-            [land_mask] * len(fclouds),
-            [erode_itmax] * len(fclouds),
-            [erode_itmin] * len(fclouds),
-            [step] * len(fclouds),
+            [fcloud_direc] * m,
+            [ftci_direc] * m,
+            [save_figs] * m,
+            [save_direc] * m,
+            [land_mask] * m,
+            [erode_itmax] * m,
+            [erode_itmin] * m,
+            [step] * m,
+            [erosion_kernel_type] * m,
+            [erosion_kernel_size] * m,
         )
 
 
