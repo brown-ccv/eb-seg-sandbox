@@ -16,6 +16,7 @@ from ebfloeseg.utils import getmeta, getres, write_mask_values, get_region_prope
 from ebfloeseg.masking import maskrgb, create_cloud_mask, mask_image
 from ebfloeseg.savefigs import imsave
 
+
 def process(
     fcloud,
     ftci,
