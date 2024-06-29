@@ -207,6 +207,12 @@ def process(
     )
 
 
+def validate_kernel_type(ctx: typer.Context, value: str) -> str:
+    if value not in ["diamond", "ellipse"]:
+        raise typer.BadParameter("Kernel type must be 'diamond' or 'ellipse'")
+    return value
+
+
 help = "TODO: add description"
 name = "ebprog"
 epilog = "Example: ebprog process_images --data_direc /path/to/data --save_figs --save_direc /path/to/save --land /path/to/landmask"
