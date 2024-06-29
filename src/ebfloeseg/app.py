@@ -23,7 +23,20 @@ from ebfloeseg.masking import maskrgb, create_cloud_mask, create_land_mask, mask
 from ebfloeseg.savefigs import imsave
 
 
-def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_mask):
+def process(
+    fcloud,
+    ftci,
+    fcloud_direc,
+    ftci_direc,
+    save_figs,
+    save_direc,
+    land_mask,
+    erode_itmax: int = 8,
+    erode_itmin: int = 3,
+    step: int = -1,
+    erosion_kernel_type: str = "diamond",
+    erosion_kernel_size: int = 1,
+):
 
     doy, year, sat = getmeta(fcloud)
     res = getres(doy, year)
@@ -98,25 +111,27 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
         )
 
     # here dialating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    kernel = diamond(10)
-    lmd = binary_dilation(lmd.astype(int), kernel)
+    lmd = binary_dilation(lmd.astype(int), diamond(10))
 
     # setting up different kernel for erosion-expansion algo
-    kernel_er1 = diamond(1)
+    if erosion_kernel_type == "diamond":
+        kernel_er = diamond(erosion_kernel_size)
+    elif erosion_kernel_type == "ellipse":
+        kernel_er = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
+        )
 
     inp = ice_mask
     input_no = ice_mask
     output = np.zeros(np.shape(ice_mask))
     inpuint8 = inp.astype(np.uint8)
 
-    for r, it in enumerate(np.arange(8, 2, -1)):
+    for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, kernel_er1, iterations=it).astype(
-            np.uint8
-        )
+        eroded_ice_mask = cv2.erode(inpuint8, kernel_er, iterations=it).astype(np.uint8)
         eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
 
-        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er1, iterations=it).astype(
+        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er, iterations=it).astype(
             np.uint8
         )
 
@@ -133,7 +148,7 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
 
         # dilate each marker
         for _ in np.arange(0, it + 1):
-            markers = dilation(markers, kernel_er1)
+            markers = dilation(markers, kernel_er)
 
         # rewatershed
         watershed = cv2.watershed(rgb, markers)
@@ -192,6 +207,12 @@ def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_
     )
 
 
+def validate_kernel_type(ctx: typer.Context, value: str) -> str:
+    if value not in ["diamond", "ellipse"]:
+        raise typer.BadParameter("Kernel type must be 'diamond' or 'ellipse'")
+    return value
+
+
 help = "TODO: add description"
 name = "ebprog"
 epilog = "Example: ebprog process_images --data_direc /path/to/data --save_figs --save_direc /path/to/save --land /path/to/landmask"
@@ -200,10 +221,21 @@ app = typer.Typer(name=name, help=help, epilog=epilog, add_completion=False)
 
 @app.command(name="process_images")
 def process_images(
-    data_direc: Path = typer.Option(..., help="The directory containing the data"),
-    save_figs: bool = typer.Option(False, help="Whether to save figures"),
-    save_direc: Path = typer.Option(..., help="The directory to save figures"),
-    land: Path = typer.Option(..., help="The land mask to use"),
+    data_direc: Path = typer.Option(..., help="directory containing the data"),
+    save_figs: bool = typer.Option(False, help="whether to save figures"),
+    save_direc: Path = typer.Option(..., help="directory to save figures"),
+    land: Path = typer.Option(..., help="land mask to use"),
+    erode_itmax: int = typer.Option(8, help="maximum number of iterations for erosion"),
+    erode_itmin: int = typer.Option(
+        3, help="(inclusive) minimum number of iterations for erosion"
+    ),
+    step: int = typer.Option(-1, help="step size for erosion"),
+    erosion_kernel_type: str = typer.Option(
+        "diamond",
+        help="type of kernel (either diamond or ellipse)",
+        callback=validate_kernel_type,
+    ),
+    erosion_kernel_size: int = typer.Option(1, help="size of the erosion kernel"),
 ):
 
     ftci_direc: Path = data_direc / "tci"
@@ -212,17 +244,23 @@ def process_images(
 
     ftcis = sorted(os.listdir(ftci_direc))
     fclouds = sorted(os.listdir(fcloud_direc))
+    m = len(fclouds)
 
     with ProcessPoolExecutor() as executor:
         executor.map(
             process,
             fclouds,
             ftcis,
-            [fcloud_direc] * len(fclouds),
-            [ftci_direc] * len(ftcis),
-            [save_figs] * len(fclouds),
-            [save_direc] * len(ftcis),
-            [land_mask] * len(fclouds),
+            [fcloud_direc] * m,
+            [ftci_direc] * m,
+            [save_figs] * m,
+            [save_direc] * m,
+            [land_mask] * m,
+            [erode_itmax] * m,
+            [erode_itmin] * m,
+            [step] * m,
+            [erosion_kernel_type] * m,
+            [erosion_kernel_size] * m,
         )
 
 

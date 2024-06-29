@@ -3,10 +3,12 @@ from tempfile import TemporaryDirectory
 
 import rasterio
 import numpy as np
+import pytest
 
 from ebfloeseg.savefigs import imsave
 
 
+@pytest.mark.slow
 def test_imsave():
     with rasterio.open("tests/input/tci/tci_2012-08-01_214_terra.tiff") as tci:
 
