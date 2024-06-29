@@ -23,7 +23,18 @@ from ebfloeseg.masking import maskrgb, create_cloud_mask, create_land_mask, mask
 from ebfloeseg.savefigs import imsave
 
 
-def process(fcloud, ftci, fcloud_direc, ftci_direc, save_figs, save_direc, land_mask):
+def process(
+    fcloud,
+    ftci,
+    fcloud_direc,
+    ftci_direc,
+    save_figs,
+    save_direc,
+    land_mask,
+    erode_itmax: int = 8,
+    erode_itmin: int = 3,
+    step: int = -1,
+):
 
     doy, year, sat = getmeta(fcloud)
     res = getres(doy, year)
