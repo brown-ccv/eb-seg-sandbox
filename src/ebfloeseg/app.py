@@ -120,7 +120,7 @@ def process(
     output = np.zeros(np.shape(ice_mask))
     inpuint8 = inp.astype(np.uint8)
 
-    for r, it in enumerate(np.arange(8, 2, -1)):
+    for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
         eroded_ice_mask = cv2.erode(inpuint8, kernel_er1, iterations=it).astype(
             np.uint8
@@ -215,6 +215,13 @@ def process_images(
     save_figs: bool = typer.Option(False, help="Whether to save figures"),
     save_direc: Path = typer.Option(..., help="The directory to save figures"),
     land: Path = typer.Option(..., help="The land mask to use"),
+    erode_itmax: int = typer.Option(
+        8, help="The maximum number of iterations for erosion"
+    ),
+    erode_itmin: int = typer.Option(
+        3, help="The (inclusive) minimum number of iterations for erosion"
+    ),
+    step: int = typer.Option(-1, help="The step size for erosion"),
 ):
 
     ftci_direc: Path = data_direc / "tci"
@@ -234,6 +241,9 @@ def process_images(
             [save_figs] * len(fclouds),
             [save_direc] * len(ftcis),
             [land_mask] * len(fclouds),
+            [erode_itmax] * len(fclouds),
+            [erode_itmin] * len(fclouds),
+            [step] * len(fclouds),
         )
 
 
