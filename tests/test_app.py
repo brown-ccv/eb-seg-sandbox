@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import pytest
 
+
 @pytest.mark.smoke
 @pytest.mark.slow
 def test_ebproc():
