@@ -34,6 +34,8 @@ def process(
     erode_itmax: int = 8,
     erode_itmin: int = 3,
     step: int = -1,
+    erosion_kernel_type: str = "diamond",
+    erosion_kernel_size: int = 1,
 ):
 
     doy, year, sat = getmeta(fcloud)
@@ -109,11 +111,15 @@ def process(
         )
 
     # here dialating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    kernel = diamond(10)
-    lmd = binary_dilation(lmd.astype(int), kernel)
+    lmd = binary_dilation(lmd.astype(int), diamond(10))
 
     # setting up different kernel for erosion-expansion algo
-    kernel_er1 = diamond(1)
+    if erosion_kernel_type == "diamond":
+        kernel_er = diamond(erosion_kernel_size)
+    elif erosion_kernel_type == "ellipse":
+        kernel_er = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
+        )
 
     inp = ice_mask
     input_no = ice_mask
@@ -122,12 +128,10 @@ def process(
 
     for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, kernel_er1, iterations=it).astype(
-            np.uint8
-        )
+        eroded_ice_mask = cv2.erode(inpuint8, kernel_er, iterations=it).astype(np.uint8)
         eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
 
-        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er1, iterations=it).astype(
+        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er, iterations=it).astype(
             np.uint8
         )
 
@@ -144,7 +148,7 @@ def process(
 
         # dilate each marker
         for _ in np.arange(0, it + 1):
-            markers = dilation(markers, kernel_er1)
+            markers = dilation(markers, kernel_er)
 
         # rewatershed
         watershed = cv2.watershed(rgb, markers)
