@@ -146,4 +146,8 @@ where = ["src"]
 requires = ["setuptools>=43.0.0", "setuptools_scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools_scm]
+[tool.pytest.ini_options]
+markers = [
+    "smoke: mark a test as a smoke test.",
+    "slow: mark tests that run slowly."
+]
