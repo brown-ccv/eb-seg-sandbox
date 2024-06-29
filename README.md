@@ -14,7 +14,7 @@ Files include:
 
 - Refactored and optimized code
 - Notebook using packaged code
-- CLI tool `ebproc` for image processing.
+- CLI tool `ebproc` for image processing
 
 ## Installation
 ### Preparation
@@ -22,7 +22,6 @@ Files include:
 python -m venv .venv # create an enviroment for running the package
 source .venv/bin/activate # activate the enviroment just created
 pip install --upgrade pip # upgrade pip in case it's an old/unsupported version
-pip install .
 ```
 ### For regular use
 ```sh
