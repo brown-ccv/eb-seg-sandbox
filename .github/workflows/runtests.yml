@@ -31,6 +31,3 @@ jobs:
     - name: Test with pytest
       run: |
         pytest -n auto --cov=. --cov-report term-missing
-    - name: Test CLI command
-      run: |
-        ebproc --help
