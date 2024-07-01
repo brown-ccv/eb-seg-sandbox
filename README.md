@@ -1,5 +1,5 @@
 # Segmentation_EB (Original Files)
-new segmentation routine used for FSD and accurate floe characteristics (Buckley et al., 2024)
+new segmentation routine used for floe size distribution (FSD) and accurate floe characteristics (Buckley et al., 2024)
 
 Files include:
 - Segmentation_EB.ipynb - example notebook with commented seg algorithm code
