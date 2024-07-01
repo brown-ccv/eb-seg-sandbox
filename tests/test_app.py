@@ -6,16 +6,15 @@ import pytest
 
 @pytest.mark.smoke
 @pytest.mark.slow
-def test_ebproc():
+def test_fsdproc():
 
     with TemporaryDirectory() as save_dir:
 
         input_dir = Path(__file__).parent / "input"
 
-        # Run the ebproc command
         result = subprocess.run(
             [
-                "ebproc",
+                "fsdproc",
                 "--data-direc",
                 input_dir,
                 "--save-direc",
