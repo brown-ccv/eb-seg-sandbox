@@ -14,7 +14,7 @@ Files include:
 
 - Refactored and optimized code
 - Notebook using packaged code
-- CLI tool `ebproc` for image processing
+- CLI tool `fsdproc` for image processing
 
 ## Installation
 ### Preparation
@@ -36,4 +36,4 @@ pip install -e ".[dev]"
 ```
 
 ## CLI
-Upon installation the `ebproc` command will be available. View its help with `ebproc --help`.
+Upon installation the `fsdproc` command will be available. View its help with `fsdproc --help`.
