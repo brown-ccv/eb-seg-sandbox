@@ -18,11 +18,11 @@ def validate_kernel_type(ctx: typer.Context, value: str) -> str:
 
 help = "TODO: add description"
 name = "fsdproc"
-epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landmask"
-app = typer.Typer(name=name, help=help, epilog=epilog, add_completion=False)
+epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landfile"
+app = typer.Typer(name=name, add_completion=False)
 
 
-@app.command(name="process_images")
+@app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
     data_direc: Path = typer.Option(..., help="directory containing the data"),
     save_figs: bool = typer.Option(False, help="whether to save figures"),
