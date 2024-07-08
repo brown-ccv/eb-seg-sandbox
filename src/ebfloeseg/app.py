@@ -36,6 +36,48 @@ epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /
 app = typer.Typer(name=name, add_completion=False)
 
 
+def parse_config_file(
+    config_file: Path,
+    data_direc: Path = None,  # directory containing TCI and cloud images
+    save_direc: Path = None,  # directory to save figures
+    land: Path = None,  # path to land mask image
+    save_figs: bool = False,  # whether to save figures
+    erode_itmax: int = 8,  # maximum number of iterations for erosion
+    erode_itmin: int = 3,  # (inclusive) minimum number of iterations for erosion
+    step: int = -1,  # step size for erosion
+    erosion_kernel_type: str = "diamond",  # type of kernel (either diamond or ellipse)
+    erosion_kernel_size: int = 1,
+) -> ConfigParams:
+    if config_file and config_file.exists():
+        with open(config_file, "rb") as f:
+            config = tomllib.load(f)
+            # Load configuration from file and update default values
+            data_direc = Path(config.get("data_direc", data_direc))
+            save_figs = config.get("save_figs", save_figs)
+            save_direc = Path(config.get("save_direc", save_direc))
+            land = Path(config.get("land", land))
+            erode_itmax = config.get("erode_itmax", erode_itmax)
+            erode_itmin = config.get("erode_itmin", erode_itmin)
+            step = config.get("step", step)
+            erosion_kernel_type = config.get("erosion_kernel_type", erosion_kernel_type)
+            erosion_kernel_size = config.get("erosion_kernel_size", erosion_kernel_size)
+    else:
+        typer.echo("Configuration file does not exist.")
+        raise typer.Exit(code=1)
+
+
+    return ConfigParams(
+        data_direc,
+        land,
+        save_figs,
+        save_direc,
+        erode_itmax,
+        erode_itmin,
+        step,
+        erosion_kernel_type,
+        erosion_kernel_size,
+    )
+
 @app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
     data_direc: Path = typer.Option(..., help="directory containing the data"),
