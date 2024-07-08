@@ -104,7 +104,7 @@ def process(
             as_uint8=True,
         )
 
-    # here dialating the land and cloud mask so any floes that are adjacent to the mask can be removed later
+    # here dilating the land and cloud mask so any floes that are adjacent to the mask can be removed later
     lmd = binary_dilation(lmd.astype(int), diamond(10))
 
     # setting up different kernel for erosion-expansion algo
