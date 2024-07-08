@@ -104,7 +104,7 @@ def process(
             as_uint8=True,
         )
 
-    # here dialating the land and cloud mask so any floes that are adjacent to the mask can be removed later
+    # here dilating the land and cloud mask so any floes that are adjacent to the mask can be removed later
     lmd = binary_dilation(lmd.astype(int), diamond(10))
 
     # setting up different kernel for erosion-expansion algo
@@ -115,10 +115,8 @@ def process(
             cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
         )
 
-    inp = ice_mask
-    input_no = ice_mask
     output = np.zeros(np.shape(ice_mask))
-    inpuint8 = inp.astype(np.uint8)
+    inpuint8 = ice_mask.astype(np.uint8)
 
     for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
@@ -151,7 +149,7 @@ def process(
         watershed[np.isin(watershed, np.unique(watershed[(lmd) & (watershed > 1)]))] = 1
 
         # set the open water and already identified floes to no
-        watershed[~input_no] = 1
+        watershed[~ice_mask] = 1
 
         # get rid of ones that are too small
         area_lim = (it) ** 4
@@ -174,7 +172,6 @@ def process(
                 as_uint8=True,
             )
 
-        inp = (watershed == 1) & (inp == 1) & ice_mask
         watershed[watershed < 2] = 0
         output = watershed + output
 
