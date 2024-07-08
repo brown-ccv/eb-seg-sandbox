@@ -14,7 +14,7 @@ description = "Icefloe segmentation by Buckley" # Optional
 
 readme = "README.md" # Optional
 
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 license = { file = "LICENSE.txt" }
 
