@@ -172,7 +172,6 @@ def process(
                 as_uint8=True,
             )
 
-        inp = (watershed == 1) & (inp == 1) & ice_mask
         watershed[watershed < 2] = 0
         output = watershed + output
 
