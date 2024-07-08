@@ -80,22 +80,16 @@ def parse_config_file(
 
 @app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
-    data_direc: Path = typer.Option(..., help="directory containing the data"),
-    save_figs: bool = typer.Option(False, help="whether to save figures"),
-    save_direc: Path = typer.Option(..., help="directory to save figures"),
-    land: Path = typer.Option(..., help="land mask to use"),
-    erode_itmax: int = typer.Option(8, help="maximum number of iterations for erosion"),
-    erode_itmin: int = typer.Option(
-        3, help="(inclusive) minimum number of iterations for erosion"
+    config_file: Path = typer.Option(
+        ...,
+        "--config-file",
+        "-c",
+        help="Path to configuration file",
     ),
-    step: int = typer.Option(-1, help="step size for erosion"),
-    erosion_kernel_type: str = typer.Option(
-        "diamond",
-        help="type of kernel (either diamond or ellipse)",
-        callback=validate_kernel_type,
-    ),
-    erosion_kernel_size: int = typer.Option(1, help="size of the erosion kernel"),
 ):
+
+    params = parse_config_file(config_file)
+    data_direc = params.data_direc
 
     ftci_direc: Path = data_direc / "tci"
     fcloud_direc: Path = data_direc / "cloud"
