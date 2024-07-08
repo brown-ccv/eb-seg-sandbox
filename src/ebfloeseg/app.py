@@ -17,8 +17,8 @@ def validate_kernel_type(ctx: typer.Context, value: str) -> str:
 
 
 help = "TODO: add description"
-name = "ebprog"
-epilog = "Example: ebprog process_images --data_direc /path/to/data --save_figs --save_direc /path/to/save --land /path/to/landmask"
+name = "fsdproc"
+epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landmask"
 app = typer.Typer(name=name, help=help, epilog=epilog, add_completion=False)
 
 
