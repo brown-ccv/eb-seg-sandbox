@@ -9,6 +9,19 @@ import typer
 
 from ebfloeseg.masking import create_land_mask
 from ebfloeseg.process import process
+from collections import namedtuple
+
+ConfigParams = namedtuple("ConfigParams", [
+    "data_direc",
+    "land",
+    "save_figs",
+    "save_direc",
+    "erode_itmax",
+    "erode_itmin",
+    "step",
+    "erosion_kernel_type",
+    "erosion_kernel_size"
+])
 
 
 def validate_kernel_type(ctx: typer.Context, value: str) -> str:
