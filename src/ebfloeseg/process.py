@@ -115,10 +115,8 @@ def process(
             cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
         )
 
-    inp = ice_mask
-    input_no = ice_mask
     output = np.zeros(np.shape(ice_mask))
-    inpuint8 = inp.astype(np.uint8)
+    inpuint8 = ice_mask.astype(np.uint8)
 
     for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
