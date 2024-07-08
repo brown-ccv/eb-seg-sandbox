@@ -149,7 +149,7 @@ def process(
         watershed[np.isin(watershed, np.unique(watershed[(lmd) & (watershed > 1)]))] = 1
 
         # set the open water and already identified floes to no
-        watershed[~input_no] = 1
+        watershed[~ice_mask] = 1
 
         # get rid of ones that are too small
         area_lim = (it) ** 4
