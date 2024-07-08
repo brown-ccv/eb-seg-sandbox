@@ -93,7 +93,7 @@ def process_images(
 
     ftci_direc: Path = data_direc / "tci"
     fcloud_direc: Path = data_direc / "cloud"
-    land_mask = create_land_mask(land)
+    land_mask = create_land_mask(params.land)
 
     ftcis = sorted(os.listdir(ftci_direc))
     fclouds = sorted(os.listdir(fcloud_direc))
@@ -106,14 +106,14 @@ def process_images(
             ftcis,
             [fcloud_direc] * m,
             [ftci_direc] * m,
-            [save_figs] * m,
-            [save_direc] * m,
+            [params.save_figs] * m,
+            [params.save_direc] * m,
             [land_mask] * m,
-            [erode_itmax] * m,
-            [erode_itmin] * m,
-            [step] * m,
-            [erosion_kernel_type] * m,
-            [erosion_kernel_size] * m,
+            [params.erode_itmax] * m,
+            [params.erode_itmin] * m,
+            [params.step] * m,
+            [params.erosion_kernel_type] * m,
+            [params.erosion_kernel_size] * m,
         )
 
 
