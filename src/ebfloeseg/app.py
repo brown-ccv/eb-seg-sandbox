@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import os
+import tomllib
 from concurrent.futures import ProcessPoolExecutor
 
 import typer
