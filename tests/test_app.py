@@ -30,8 +30,37 @@ def test_fsdproc():
         # Check command ran successfully
         assert result.returncode == 0, f"Command failed with error: {result.stderr}"
 
-        # Check output files were created
-        for folder in ["214", "215"]:
-            assert any(
-                Path(save_dir, folder).iterdir()
-            ), f"No files were created in the output directory {folder}."
+    # Check output files were created
+    for folder in ["214", "215"]:
+        assert any(
+            Path(tmpdir, folder).iterdir()
+        ), f"No files were created in the output directory {folder}."
+
+
+def test_parse_config_file(tmpdir):
+    config_file = tmpdir.join("config.toml")
+    config_file.write(
+        """
+        data_direc = "/path/to/data"
+        save_figs = true
+        save_direc = "/path/to/save"
+        land = "/path/to/landfile"
+        erode_itmax = 10
+        erode_itmin = 5
+        step = 2
+        erosion_kernel_type = "ellipse"
+        erosion_kernel_size = 3
+        """
+    )
+
+    params = parse_config_file(config_file)
+
+    assert params.data_direc == Path("/path/to/data")
+    assert params.save_figs == True
+    assert params.save_direc == Path("/path/to/save")
+    assert params.land == Path("/path/to/landfile")
+    assert params.erode_itmax == 10
+    assert params.erode_itmin == 5
+    assert params.step == 2
+    assert params.erosion_kernel_type == "ellipse"
+    assert params.erosion_kernel_size == 3
