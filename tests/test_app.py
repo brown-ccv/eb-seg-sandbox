@@ -1,37 +1,71 @@
 import subprocess
 from pathlib import Path
-from tempfile import TemporaryDirectory
 import pytest
+from ebfloeseg.app import parse_config_file
 
 
 @pytest.mark.smoke
 @pytest.mark.slow
-def test_fsdproc():
+def test_fsdproc(tmpdir):
+    config_file = tmpdir.join("config.toml")
+    config_file.write(
+        f"""
+        data_direc = "tests/input"
+        save_figs = true
+        save_direc = "{tmpdir}"
+        land = "tests/input/reproj_land.tiff"
+        erode_itmax = 8
+        erode_itmin = 3
+        step = -1
+        erosion_kernel_type = "diamond"
+        erosion_kernel_size = 1
+        """
+    )
 
-    with TemporaryDirectory() as save_dir:
+    result = subprocess.run(
+        [
+            "fsdproc",
+            "--config-file",
+            str(config_file),
+        ],
+        capture_output=True,
+        text=True,
+    )
 
-        input_dir = Path(__file__).parent / "input"
+    # Check command ran successfully
+    assert result.returncode == 0, f"Command failed with error: {result.stderr}"
 
-        result = subprocess.run(
-            [
-                "fsdproc",
-                "--data-direc",
-                input_dir,
-                "--save-direc",
-                str(save_dir),
-                "--save-figs",
-                "--land",
-                input_dir / "reproj_land.tiff",
-            ],
-            capture_output=True,
-            text=True,
-        )
+    # Check output files were created
+    for folder in ["214", "215"]:
+        assert any(
+            Path(tmpdir, folder).iterdir()
+        ), f"No files were created in the output directory {folder}."
 
-        # Check command ran successfully
-        assert result.returncode == 0, f"Command failed with error: {result.stderr}"
 
-        # Check output files were created
-        for folder in ["214", "215"]:
-            assert any(
-                Path(save_dir, folder).iterdir()
-            ), f"No files were created in the output directory {folder}."
+def test_parse_config_file(tmpdir):
+    config_file = tmpdir.join("config.toml")
+    config_file.write(
+        """
+        data_direc = "/path/to/data"
+        save_figs = true
+        save_direc = "/path/to/save"
+        land = "/path/to/landfile"
+        erode_itmax = 10
+        erode_itmin = 5
+        step = 2
+        erosion_kernel_type = "ellipse"
+        erosion_kernel_size = 3
+        """
+    )
+
+    params = parse_config_file(config_file)
+
+    assert params.data_direc == Path("/path/to/data")
+    assert params.save_figs
+    assert params.save_direc == Path("/path/to/save")
+    assert params.land == Path("/path/to/landfile")
+    assert params.erode_itmax == 10
+    assert params.erode_itmin == 5
+    assert params.step == 2
+    assert params.erosion_kernel_type == "ellipse"
+    assert params.erosion_kernel_size == 3

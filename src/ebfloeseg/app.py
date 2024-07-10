@@ -2,12 +2,27 @@
 
 from pathlib import Path
 import os
+import tomllib
 from concurrent.futures import ProcessPoolExecutor
 
 import typer
 
 from ebfloeseg.masking import create_land_mask
 from ebfloeseg.process import process
+from dataclasses import dataclass
+
+
+@dataclass
+class ConfigParams:
+    data_direc: Path
+    land: Path
+    save_figs: bool
+    save_direc: Path
+    erode_itmax: int
+    erode_itmin: int
+    step: int
+    erosion_kernel_type: str
+    erosion_kernel_size: int
 
 
 def validate_kernel_type(ctx: typer.Context, value: str) -> str:
@@ -22,28 +37,52 @@ epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /
 app = typer.Typer(name=name, add_completion=False)
 
 
+def parse_config_file(config_file: Path) -> ConfigParams:
+
+    if not config_file.exists():
+        raise FileNotFoundError("Configuration file does not exist.")
+
+    with open(config_file, "rb") as f:
+        config = tomllib.load(f)
+
+    defaults = {
+        "data_direc": None,  # directory containing TCI and cloud images
+        "save_direc": None,  # directory to save figures
+        "land": None,  # path to land mask image
+        "save_figs": False,  # whether to save figures
+        "erode_itmax": 8,  # maximum number of iterations for erosion
+        "erode_itmin": 3,  # (inclusive) minimum number of iterations for erosion
+        "step": -1,
+        "erosion_kernel_type": "diamond",  # type of kernel (either diamond or ellipse)
+        "erosion_kernel_size": 1,
+    }
+
+    for key in defaults:
+        if key in config:
+            value = config[key]
+            if "direc" in key or key == "land":  # Handle paths specifically
+                value = Path(value)
+            defaults[key] = value
+
+    return ConfigParams(**defaults)
+
+
 @app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
-    data_direc: Path = typer.Option(..., help="directory containing the data"),
-    save_figs: bool = typer.Option(False, help="whether to save figures"),
-    save_direc: Path = typer.Option(..., help="directory to save figures"),
-    land: Path = typer.Option(..., help="land mask to use"),
-    erode_itmax: int = typer.Option(8, help="maximum number of iterations for erosion"),
-    erode_itmin: int = typer.Option(
-        3, help="(inclusive) minimum number of iterations for erosion"
+    config_file: Path = typer.Option(
+        ...,
+        "--config-file",
+        "-c",
+        help="Path to configuration file",
     ),
-    step: int = typer.Option(-1, help="step size for erosion"),
-    erosion_kernel_type: str = typer.Option(
-        "diamond",
-        help="type of kernel (either diamond or ellipse)",
-        callback=validate_kernel_type,
-    ),
-    erosion_kernel_size: int = typer.Option(1, help="size of the erosion kernel"),
 ):
+
+    params = parse_config_file(config_file)
+    data_direc = params.data_direc
 
     ftci_direc: Path = data_direc / "tci"
     fcloud_direc: Path = data_direc / "cloud"
-    land_mask = create_land_mask(land)
+    land_mask = create_land_mask(params.land)
 
     ftcis = sorted(os.listdir(ftci_direc))
     fclouds = sorted(os.listdir(fcloud_direc))
@@ -56,14 +95,14 @@ def process_images(
             ftcis,
             [fcloud_direc] * m,
             [ftci_direc] * m,
-            [save_figs] * m,
-            [save_direc] * m,
+            [params.save_figs] * m,
+            [params.save_direc] * m,
             [land_mask] * m,
-            [erode_itmax] * m,
-            [erode_itmin] * m,
-            [step] * m,
-            [erosion_kernel_type] * m,
-            [erosion_kernel_size] * m,
+            [params.erode_itmax] * m,
+            [params.erode_itmin] * m,
+            [params.step] * m,
+            [params.erosion_kernel_type] * m,
+            [params.erosion_kernel_size] * m,
         )
 
 
