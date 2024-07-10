@@ -23,7 +23,7 @@ def imsave(
     profile.update(
         dtype=rasterio.uint8,  # sample images are uint8; might not be needed? CP
         count=count,
-        compress="lzw",
+        compress=compress,
     )
 
     if res:
