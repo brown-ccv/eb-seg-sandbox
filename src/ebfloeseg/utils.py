@@ -11,6 +11,10 @@ def imshow(img: ArrayLike, cmap: str = "gray") -> None:
     plt.show()
 
 
+def imopen(path: str) -> None:
+    return plt.imread(path)
+
+
 def getdoy(fname: str) -> str:
     """
     Extracts the day of year (DOY) from a given filename.
