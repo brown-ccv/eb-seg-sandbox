@@ -57,6 +57,10 @@ def parse_config_file(config_file: Path) -> ConfigParams:
         "erosion_kernel_size": 1,
     }
 
+    erosion = config["erosion"]
+    config.pop("erosion")
+    config.update(erosion)
+
     for key in defaults:
         if key in config:
             value = config[key]
