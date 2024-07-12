@@ -1,30 +1,14 @@
-# config.toml for fsdproc CLI
+# Configuration file for fsdproc CLI
 
-# directory containing the data
-# Required parameter
-# data_direc must contain the folders `cloud`, `tci`, and a tiff file with the land outline (see `test/input`)
+# data_direc must contain the folders `cloud`, `tci`
 data_direc = "tests/input"
-
-# whether to save figures (default: False)
 save_figs = true
+save_direc = "temp"                   # directory to save figures
+land = "tests/input/reproj_land.tiff" # land mask to use
 
-# directory to save figures
-# Required parameter
-save_direc = "temp"
-
-# land mask to use
-# Required parameter
-land = "tests/input/reproj_land.tiff"
-
-# Erosion parameters
-## maximum number of iterations for erosion
-erode_itmax = 8
-
-## (inclusive) minimum number of iterations for erosion
-erode_itmin = 3
-
+[erosion]
+erode_itmax = 8                 # maximum number of iterations for erosion
+erode_itmin = 3                 # (inclusive) minimum number of iterations for erosion
 step = -1
-
-erosion_kernel_type = "diamond"
-
+erosion_kernel_type = "diamond" # "ellipse" also supported
 erosion_kernel_size = 1
