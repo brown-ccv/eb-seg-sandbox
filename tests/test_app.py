@@ -14,6 +14,7 @@ def test_fsdproc(tmpdir):
         save_figs = true
         save_direc = "{tmpdir}"
         land = "tests/input/reproj_land.tiff"
+        [erosion]
         erode_itmax = 8
         erode_itmin = 3
         step = -1
@@ -50,6 +51,7 @@ def test_parse_config_file(tmpdir):
         save_figs = true
         save_direc = "/path/to/save"
         land = "/path/to/landfile"
+        [erosion]
         erode_itmax = 10
         erode_itmin = 5
         step = 2
