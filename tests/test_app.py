@@ -2,6 +2,8 @@ import subprocess
 from pathlib import Path
 import pytest
 from ebfloeseg.app import parse_config_file
+from collections import Counter
+import os
 
 
 @pytest.mark.smoke
@@ -41,6 +43,13 @@ def test_fsdproc(tmpdir):
         assert any(
             Path(tmpdir, folder).iterdir()
         ), f"No files were created in the output directory {folder}."
+
+    expected_counts_by_extension = {".tif": 10, ".txt": 1, ".csv": 1, ".png": 1}
+
+    for ext, count in Counter(
+        Path(f).suffix for f in os.listdir(tmpdir / "214")
+    ).items():
+        assert expected_counts_by_extension[ext] == count
 
 
 def test_parse_config_file(tmpdir):
