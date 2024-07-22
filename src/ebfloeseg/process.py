@@ -9,6 +9,13 @@ from ebfloeseg.savefigs import imsave
 from ebfloeseg.preprocess import preprocess
 
 
+def extract_features(output, red_c, target_dir, res, sat):
+    fname = target_dir / f"{res}_{sat}_props.csv"
+    props = get_region_properties(output, red_c)
+    df = pd.DataFrame.from_dict(props)
+    df.to_csv(fname)
+
+
 def process(
     fcloud,
     ftci,
@@ -49,11 +56,7 @@ def process(
     )
 
     # saving the props table and label floes tif
-    props = get_region_properties(output, red_c)
-
-    df = pd.DataFrame.from_dict(props)
-    fname = target_dir / f"{res}_{sat}_props.csv"
-    df.to_csv(fname)
+    extract_features(output, red_c, target_dir, res, sat)
 
     # saving the label floes tif
     fname = f"{sat}_final.tif"
