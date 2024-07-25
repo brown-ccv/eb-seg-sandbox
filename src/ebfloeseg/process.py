@@ -40,6 +40,17 @@ def process(
     tci = rasterio.open(ftci_direc / ftci)
     cloud_mask = create_cloud_mask(fcloud_direc / fcloud)
 
+    ## OLD
+    _cloud=rasterio.open(fcloud)
+    _tci=rasterio.open(ftci)
+    _cloud_mask=(_cloud.read()[0])==255
+    assert cloud_mask.all()==_cloud_mask.all()
+    assert tci.read().all()==_tci.read().all()
+    assert False
+    raise Exception("Boo!")
+    asdfasd
+
+
     output, red_c = preprocess(
         tci,
         cloud_mask,
