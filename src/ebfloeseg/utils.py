@@ -5,10 +5,11 @@ import skimage
 from numpy.typing import ArrayLike
 
 
-def imshow(img: ArrayLike, cmap: str = "gray") -> None:
+def imshow(img: ArrayLike, cmap: str = "gray", show: bool = True) -> None:
     plt.imshow(img, cmap=cmap)
     plt.axis("off")
-    plt.show()
+    if show:
+        plt.show()
 
 
 def imopen(path: str) -> None:
