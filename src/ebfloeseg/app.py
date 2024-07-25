@@ -97,7 +97,7 @@ def process_images(
     fclouds = sorted(os.listdir(fcloud_direc))
     m = len(fclouds)
 
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=max workers) as executor:
         executor.map(
             process,
             fclouds,
