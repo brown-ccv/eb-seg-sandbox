@@ -1,7 +1,16 @@
 from ebfloeseg.utils import *
 import numpy as np
-import tempfile
-from pathlib import Path
+
+from ebfloeseg.utils import (
+    write_mask_values,
+    get_region_properties,
+    imshow,
+    getdoy,
+    getyear,
+    getsat,
+    getmeta,
+    getres,
+)
 
 f1 = "cloud_2012-08-01_214_terra.tiff"
 f2 = "tci_2013-08-04_217_terra.tiff"
@@ -49,8 +58,8 @@ def test_write_mask_values():
             save_direc,
         )
 
-        with open(save_direc / "mask_values_2012.txt", "r") as f:
-            assert f.readline() == "214\t9\t-18\t-0.5\n"
+    with open(tmpdir / "mask_values_2012.txt", "r") as f:
+        assert f.readline() == "214\t9\t-18\t-0.5\n"
 
 
 def test_get_region_properties():
