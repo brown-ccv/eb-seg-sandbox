@@ -85,7 +85,6 @@ def process_images(
         None,
         help="The maximum number of workers. If None, uses all available processors.",
     ),
-    max_workers: Optional[int] = typer.Option(None, help="The maximum number of workers. If None, uses all available processors."),
 ):
 
     params = parse_config_file(config_file)
