@@ -1,4 +1,3 @@
-from ebfloeseg.utils import *
 import numpy as np
 
 from ebfloeseg.utils import (
@@ -71,5 +70,5 @@ def test_get_region_properties():
 
 def test_imshow():
     img = np.random.choice([False, True], size=(1, 1))
-    imshow(img)
+    imshow(img, show=False)
     assert True
