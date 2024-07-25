@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import tomllib
 from concurrent.futures import ProcessPoolExecutor
+from typing import Optional
 
 import typer
 
@@ -79,6 +80,7 @@ def process_images(
         "-c",
         help="Path to configuration file",
     ),
+    max_workers: Optional[int] = typer.Option(None, help="The maximum number of workers. If None, uses all available processors."),
 ):
 
     params = parse_config_file(config_file)
@@ -92,7 +94,7 @@ def process_images(
     fclouds = sorted(os.listdir(fcloud_direc))
     m = len(fclouds)
 
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         executor.map(
             process,
             fclouds,
