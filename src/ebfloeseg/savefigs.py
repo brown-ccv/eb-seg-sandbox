@@ -28,7 +28,7 @@ def imsave(
     )
 
     if res:
-        fname = save_direc / f"{res}_{doy}_{fname}"
+        fname = save_direc / f"{res}_{fname}"
     else:
         fname = save_direc / fname
 
@@ -42,10 +42,13 @@ def imsave(
             img = img.astype(np.uint8)
             dst.write(img, 1)
 
-def save_ice_mask_hist(red_masked, bins,  mincut, maxcut, doy, target_dir, color="r", figsize=(6, 2)):
+
+def save_ice_mask_hist(
+    red_masked, bins, mincut, maxcut, doy, target_dir, color="r", figsize=(6, 2)
+):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     plt.hist(red_masked.flatten(), bins=bins, color=color)
     plt.axvline(mincut)
     plt.axvline(maxcut)
-    plt.savefig(target_dir / f"{doy}_ice_mask_hist.png")
+    plt.savefig(target_dir / f"ice_mask_hist.png")
     return ax

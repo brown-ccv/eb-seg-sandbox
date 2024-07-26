@@ -115,7 +115,7 @@ def write_mask_values(
     """
     land_cloud_mask_sum = sum(sum(~(lmd)))
     fname = (
-        save_direc / f"{doy}_mask_values.txt"
+        save_direc / f"mask_values.txt"
     )  # added temporarily while testing. TODO: use doy for subdir
     ice_mask_sum = sum(sum(ice_mask))
     ratio = ice_mask_sum / land_cloud_mask_sum
