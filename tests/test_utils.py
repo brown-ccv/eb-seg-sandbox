@@ -55,7 +55,7 @@ def test_write_mask_values(tmpdir):
         tmpdir,
     )
 
-    with open(tmpdir / "mask_values_2012.txt", "r") as f:
+    with open(tmpdir / "mask_values.txt", "r") as f:
         assert f.readline() == "214\t9\t-18\t-0.5\n"
 
 
