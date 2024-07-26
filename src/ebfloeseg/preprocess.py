@@ -9,8 +9,7 @@ from skimage.morphology import diamond, opening, dilation, binary_dilation
 
 from ebfloeseg.masking import maskrgb, mask_image
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
-from ebfloeseg.utils import write_mask_values
-from ebfloeseg.peakdet import peakdet, _peakdet
+from ebfloeseg.utils import write_mask_values, get_wcuts
 
 
 def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
@@ -39,107 +38,33 @@ def preprocess(
 ):
     # Reshape tci to RGB (3, x, y) => (x, y, 3)
     red_c, green_c, blue_c = tci.read()
-    rgb = np.dstack([red_c, green_c, blue_c])
+    rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
 
-    maskrgb(rgb, cloud_mask)
-
-    # Test refactoring
-    _red_cmasked = np.copy(tci.read()[0])
-    _green_cmasked = np.copy(tci.read()[1])
-    _blue_cmasked = np.copy(tci.read()[2])
-    _red_cmasked[cloud_mask] = 0
-    _green_cmasked[cloud_mask] = 0
-    _blue_cmasked[cloud_mask] = 0
-    _rgb_cloudmasked = np.dstack([_red_cmasked, _green_cmasked, _blue_cmasked])
-    assert np.array_equal(rgb, _rgb_cloudmasked)
-
+    maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        imsave(tci, rgb, target_dir, doy, "cloud_mask_on_rgb.tif")
+        imsave(tci, rgb_masked, target_dir, doy, "cloud_mask_on_rgb.tif")
 
-    maskrgb(rgb, land_mask)
-
-    # Test refactoring
-    _red_cmasked[land_mask] = 0
-    _green_cmasked[land_mask] = 0
-    _blue_cmasked[land_mask] = 0
-    _rgb_cloudmasked_landmasked = np.dstack(
-        [_red_cmasked, _green_cmasked, _blue_cmasked]
-    )
-    assert np.array_equal(rgb, _rgb_cloudmasked_landmasked)
-
+    maskrgb(rgb_masked, land_mask)
     if save_figs:
-        imsave(tci, rgb, target_dir, doy, "land_cloud_mask_on_rgb.tif")
+        imsave(tci, rgb_masked, target_dir, doy, "land_cloud_mask_on_rgb.tif")
 
     ## adaptive threshold for ice mask
     thresh_adaptive = threshold_local(red_c, block_size=399)
-    image = red_masked = rgb[:, :, 0]
-
-    # Test refactoring
-    _red_masked = _red_c = tci.read()[0]
-    assert np.array_equal(_red_c, _red_masked)
-    _image = _red_masked
-    assert np.array_equal(red_c, _image)
-    _thresh_adaptive = threshold_local(_image, block_size=399)
-    assert np.array_equal(thresh_adaptive, _thresh_adaptive)
-    _red_masked[(land_mask | cloud_mask)] = 0
-    assert np.array_equal(_red_masked, red_masked)
-    # assert False
 
     # here just determining the min and max values for the adaptive threshold
-    binz = np.arange(1, 256, 5)
-    rn, rbins = np.histogram(red_masked.flatten(), bins=binz)
-    dx = 0.01 * np.mean(rn)
-    rmaxtab, rmintab = peakdet(rn, dx)
-
-    # Test refactoring
-    _rmaxtab, _rmintab = _peakdet(rn, dx, x=None)
-    assert np.array_equal(rmaxtab, _rmaxtab)
-    assert np.array_equal(rmintab, _rmintab)
-    # assert False
-
-    rmax_n = rbins[rmaxtab[-1, 0]]
-    rhm_high = rmaxtab[-1, 1] / 2
-
-    # TODO: move to a function get_ow_cut_min_max
-    ow_cut_min = 100 if ~np.any(rmintab) else rbins[rmintab[-1, 0]]
-    ow_cut_max_cond = np.where(
-        (rbins[:-1] < rmax_n) & (rn <= rhm_high)
-    )  # TODO: add comment
-    if np.any(ow_cut_max_cond):
-        ow_cut_max = rbins[ow_cut_max_cond[0][-1]]  # fwhm to left of ice max
-    else:
-        ow_cut_max = rmax_n - 10
-
-    # Test refactoring
-    if ~np.any(rmintab):
-        _ow_cut_min = 100
-    else:
-        _ow_cut_min = rbins[rmintab[-1, 0]]
-    if np.any(np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))):
-        _ow_cut_max = rbins[
-            np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))[0][-1]
-        ]  # fwhm to left of ice max
-    else:
-        _ow_cut_max = rmax_n - 10
-    assert ow_cut_min == _ow_cut_min
-    assert ow_cut_max == _ow_cut_max
-    # assert False
+    ow_cut_min, ow_cut_max, bins = get_wcuts(red_masked)
 
     if save_figs:
-        save_ice_mask_hist(red_masked, binz, ow_cut_min, ow_cut_max, doy, target_dir)
+        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, target_dir)
 
-    # mask thresh_adaptive
-    mask_image(thresh_adaptive, thresh_adaptive < ow_cut_min, ow_cut_min)
-    mask_image(thresh_adaptive, thresh_adaptive > ow_cut_max, ow_cut_max)
+    # clamp thresh_adaptive
+    thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
+    ice_mask = red_masked > thresh_adaptive
 
-    ice_mask = image > thresh_adaptive
-
-
-    lmd = land_mask + cloud_mask
-
+    land_cloud_mask = land_mask + cloud_mask
     write_mask_values(
-        land_mask, lmd, ice_mask, doy, year, target_dir
+        land_mask, land_cloud_mask, ice_mask, doy, year, target_dir
     )  # Should this be done conditionally? CP
 
     # saving ice mask
@@ -156,17 +81,11 @@ def preprocess(
         )
 
     # here dilating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    lmd = binary_dilation(lmd.astype(int), diamond(10))
-
+    land_cloud_mask_dilated = binary_dilation(land_cloud_mask.astype(int), diamond(10))
 
     # TODO: move to a function erosion_expansion_algo
     # setting up different kernel for erosion-expansion algo
-    if erosion_kernel_type == "diamond":
-        kernel_er = diamond(erosion_kernel_size)
-    elif erosion_kernel_type == "ellipse":
-        kernel_er = cv2.getStructuringElement(
-            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
-        )
+    erosion_kernel = get_erosion_kernel(erosion_kernel_type, erosion_kernel_size)
 
     output = np.zeros(np.shape(ice_mask))
     inpuint8 = ice_mask.astype(np.uint8)
@@ -177,10 +96,12 @@ def preprocess(
 
     for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, erosion_kernel, iterations=it).astype(np.uint8)
+        eroded_ice_mask = cv2.erode(inpuint8, erosion_kernel, iterations=it).astype(
+            np.uint8
+        )
         eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
 
-        dilated_ice_mask = cv2.dilate(inpuint8, kernel, iterations=it).astype(
+        dilated_ice_mask = cv2.dilate(inpuint8, erosion_kernel, iterations=it).astype(
             np.uint8
         )
 
@@ -200,10 +121,12 @@ def preprocess(
             markers = dilation(markers, erosion_kernel)
 
         # rewatershed
-        watershed = cv2.watershed(rgb, markers)
+        watershed = cv2.watershed(rgb_masked, markers)
 
-        # get rid of floes that intersect the dilated land mask
-        condition = np.isin(watershed, np.unique(watershed[lmd & (watershed > 1)]))
+        # get rid of floes that intersect the dilated land mask (WARNING: cloud mask already included)
+        condition = np.isin(
+            watershed, np.unique(watershed[land_cloud_mask_dilated & (watershed > 1)])
+        )
         mask_image(watershed, condition, 1)
 
         # set the open water and already identified floes to no
@@ -216,11 +139,8 @@ def preprocess(
             watershed, properties=["label", "area"]
         )
         df = pd.DataFrame.from_dict(props)
-
         condition = np.isin(watershed, df[df.area < area_lim].label.values)
         mask_image(watershed, condition, 1)
-        # watershed[np.isin(watershed, df[df.area < area_lim].label.values)] = 1
-
 
         if save_figs:
             fname = f"identification_round_{r}.tif"
