@@ -6,6 +6,8 @@ import numpy as np
 import skimage
 from numpy.typing import ArrayLike
 
+from ebfloeseg.peakdet import peakdet
+
 
 def imshow(img: ArrayLike, cmap: str = "gray", show: bool = True) -> None:
     plt.imshow(img, cmap=cmap)
@@ -153,7 +155,14 @@ def get_region_properties(img: ArrayLike, red_c: ArrayLike) -> dict[str, ArrayLi
     return props
 
 
-def get_wcuts(rmintab, rbins, rmax_n, rn, rhm_high):
+def get_wcuts(red_masked):
+    bins = np.arange(1, 256, 5)
+    rn, rbins = np.histogram(red_masked.flatten(), bins=bins)
+    dx = 0.01 * np.mean(rn)
+    rmaxtab, rmintab = peakdet(rn, dx)
+    rmax_n = rbins[rmaxtab[-1, 0]]
+    rhm_high = rmaxtab[-1, 1] / 2
+
     if ~np.any(rmintab):
         ow_cut_min = 100
     else:
@@ -166,4 +175,4 @@ def get_wcuts(rmintab, rbins, rmax_n, rn, rhm_high):
     else:
         ow_cut_max = rmax_n - 10
 
-    return ow_cut_min, ow_cut_max
+    return ow_cut_min, ow_cut_max, bins
