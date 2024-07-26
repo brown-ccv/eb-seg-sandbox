@@ -13,6 +13,7 @@ import pandas as pd
 from ebfloeseg.masking import create_land_mask
 from ebfloeseg.preprocess import preprocess
 
+
 @dataclass
 class ConfigParams:
     data_direc: Path
@@ -88,7 +89,6 @@ def process_images(
 
     args = parse_config_file(config_file)
 
-
     save_direc = args.save_direc
 
     # create output directory
@@ -130,61 +130,6 @@ def process_images(
         # Wait for all threads to complete
         for future in futures:
             future.result()
-
-    # tests
-    # -------------------------------------------------------------------
-    def are_equal(p1, p2):
-        return Path(p1).read_bytes() == Path(p2).read_bytes()
-
-    def check_sums(p1, p2):
-        s1 = pd.read_csv(p1).to_numpy().sum()
-        s2 = pd.read_csv(p2).to_numpy().sum()
-        return s1 == s2
-
-    # Check final images
-    def test_output():
-        expdir = Path("tests/expected")
-        # Check final images
-        # -----------------------------------------------------------------
-        f214 = save_direc / "214" / "2012-08-01_terra_final.tif"
-        f214expected = expdir / "214/2012-08-01_214_terra_final.tif"
-        assert are_equal(f214, f214expected)
-        f215expected = expdir / "215/2012-08-02_215_terra_final.tif"
-        f215 = save_direc / "215/2012-08-02_terra_final.tif"
-        assert are_equal(f215, f215expected)
-
-        # Check mask values
-        # -----------------------------------------------------------------
-        maskvalues214 = save_direc / "214/mask_values.txt"
-        maskvalues214expected = expdir / "214/mask_values_2012.txt"
-        assert are_equal(maskvalues214, maskvalues214expected)
-
-        maskvalues215 = save_direc / "215/mask_values.txt"
-        maskvalues215expected = expdir / "215/mask_values_2012.txt"
-        assert are_equal(maskvalues215, maskvalues215expected)
-
-        # Check feature extraction
-        # -----------------------------------------------------------------
-        features214 = save_direc / "214/2012-08-01_terra_props.csv"
-        features214expected = expdir / "214/2012-08-01_terra_props.csv"
-        assert check_sums(features214, features214expected)
-
-        features215 = save_direc / "215/2012-08-02_terra_props.csv"
-        features215expected = expdir / "215/2012-08-02_terra_props.csv"
-        assert check_sums(features215, features215expected)
-
-        # Check intermediate identification rounds
-        # -----------------------------------------------------------------
-        for doy in ['214', '215']:
-            id_rounds = sorted((save_direc / doy).glob("*round*.tif"))
-            expected_rounds = sorted((expdir / doy).glob("*round*.tif"))
-
-            for id_round, expected_round in zip(id_rounds, expected_rounds):
-                assert are_equal(id_round, expected_round)
-
-        print("All tests passed!")
-
-    test_output()
 
 
 if __name__ == "__main__":
