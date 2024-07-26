@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import cv2
 from scipy import ndimage
 import skimage
@@ -11,11 +10,10 @@ from ebfloeseg.masking import maskrgb, mask_image
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
 from ebfloeseg.utils import write_mask_values, get_wcuts
 
+
 def get_remove_small_mask(watershed, it):
     area_lim = (it) ** 4
-    props = skimage.measure.regionprops_table(
-        watershed, properties=["label", "area"]
-    )
+    props = skimage.measure.regionprops_table(watershed, properties=["label", "area"])
     df = pd.DataFrame.from_dict(props)
     mask = np.isin(watershed, df[df.area < area_lim].label.values)
     return mask
@@ -96,33 +94,20 @@ def preprocess(
     # TODO: move to a function erosion_expansion_algo
     # setting up different kernel for erosion-expansion algo
     erosion_kernel = get_erosion_kernel(erosion_kernel_type, erosion_kernel_size)
-
     output = np.zeros(np.shape(ice_mask))
-    inpuint8 = ice_mask.astype(np.uint8)
-
-    # Test refactoring
-    inp = ice_mask
-    _output = np.zeros(np.shape(ice_mask))
-
+    ice_mask_uint8 = ice_mask.astype(np.uint8)
     for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, erosion_kernel, iterations=it).astype(
-            np.uint8
-        )
+        eroded_ice_mask = cv2.erode(ice_mask_uint8, erosion_kernel, iterations=it)
         eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
-
-        dilated_ice_mask = cv2.dilate(inpuint8, erosion_kernel, iterations=it).astype(
-            np.uint8
-        )
+        dilated_ice_mask = cv2.dilate(ice_mask_uint8, erosion_kernel, iterations=it)
 
         # label floes remaining after erosion
         ret, markers = cv2.connectedComponents(eroded_ice_mask)
 
+        unknown = cv2.subtract(dilated_ice_mask, eroded_ice_mask)
         # Add one to all labels so that sure background is not 0, but 1
         markers = markers + 1
-
-        unknown = cv2.subtract(dilated_ice_mask, eroded_ice_mask)
-
         # Now, mark the region of unknown with zero
         mask_image(markers, unknown == 255, 0)
 
@@ -140,7 +125,6 @@ def preprocess(
         mask_image(watershed, condition, 1)
 
         # set the open water and already identified floes to no
-        # watershed[~ice_mask] = 1
         mask_image(watershed, ~ice_mask, 1)
 
         # get rid of ones that are too small
