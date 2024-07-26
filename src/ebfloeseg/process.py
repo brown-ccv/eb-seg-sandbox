@@ -11,8 +11,9 @@ from ebfloeseg.savefigs import imsave
 from ebfloeseg.preprocess import preprocess
 
 
-def extract_features(output, red_c, target_dir, res, sat):
-    fname = target_dir / f"{res}_{sat}_props.csv"
+def extract_features(output, red_c, target_dir, res, sat, doy): # adding doy temporarily for testing. TODO: use doy for subdir
+    # fname = target_dir / f"{res}_{sat}_props.csv"
+    fname = target_dir / f"{res}_{sat}_{doy}_props.csv"
     props = get_region_properties(output, red_c)
     df = pd.DataFrame.from_dict(props)
     df.to_csv(fname)
