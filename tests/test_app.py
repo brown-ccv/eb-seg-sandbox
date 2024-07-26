@@ -33,11 +33,11 @@ def _test_output(tmpdir):
     # Check mask values
     # -----------------------------------------------------------------
     maskvalues214 = tmpdir / "214/mask_values.txt"
-    maskvalues214expected = expdir / "214/mask_values_2012.txt"
+    maskvalues214expected = expdir / "214/mask_values.txt"
     assert are_equal(maskvalues214, maskvalues214expected)
 
     maskvalues215 = tmpdir / "215/mask_values.txt"
-    maskvalues215expected = expdir / "215/mask_values_2012.txt"
+    maskvalues215expected = expdir / "215/mask_values.txt"
     assert are_equal(maskvalues215, maskvalues215expected)
 
     # Check feature extraction
