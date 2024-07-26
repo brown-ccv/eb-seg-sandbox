@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from ebfloeseg.process import process
+from ebfloeseg.preprocess import preprocess
 
 
 def test_process_exception(tmpdir):
@@ -18,7 +18,7 @@ def test_process_exception(tmpdir):
     erosion_kernel_size = 1
 
     with pytest.raises(Exception):
-        process(
+        preprocess(
             fcloud,
             ftci,
             fcloud_direc,
