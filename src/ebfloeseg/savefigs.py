@@ -5,6 +5,7 @@ import numpy as np
 import rasterio
 from rasterio import DatasetReader
 from numpy.typing import NDArray
+from matplotlib import pyplot as plt
 
 
 def imsave(
@@ -40,3 +41,11 @@ def imsave(
         if as_uint8:
             img = img.astype(np.uint8)
             dst.write(img, 1)
+
+def save_ice_mask_hist(red_masked, bins,  mincut, maxcut, doy, target_dir, color="r", figsize=(6, 2)):
+    fig, ax = plt.subplots(1, 1, figsize=figsize)
+    plt.hist(red_masked.flatten(), bins=bins, color=color)
+    plt.axvline(mincut)
+    plt.axvline(maxcut)
+    plt.savefig(target_dir / f"{doy}_ice_mask_hist.png")
+    return ax
