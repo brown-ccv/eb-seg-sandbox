@@ -1,56 +1,6 @@
 import numpy as np
 from numpy.typing import ArrayLike
 
-import sys # for testing
-
-def _peakdet(v, delta, x  = None):
-
-    maxtab = []
-    mintab = []
-
-    if x is None:
-        x = np.arange(len(v))
-
-    v = np.asarray(v)
-
-    if len(v) != len(x):
-        sys.exit('Input vectors v and x must have same length')
-
-    if not np.isscalar(delta):
-        sys.exit('Input argument delta must be a scalar')
-
-    if delta <= 0:
-        sys.exit('Input argument delta must be positive')
-
-    mn, mx = np.Inf, -np.Inf
-    mnpos, mxpos = np.NaN, np.NaN
-
-    lookformax = True
-   # mintab.append((0, 0.))
-
-    for i in np.arange(len(v)):
-        this = v[i]
-        if this > mx:
-            mx = this
-            mxpos = x[i]
-        if this < mn:
-            mn = this
-            mnpos = x[i]
-
-        if lookformax:
-            if this < mx-delta:
-                maxtab.append((mxpos, mx))
-                mn = this
-                mnpos = x[i]
-                lookformax = False
-        else:
-            if this > mn+delta:
-                mintab.append((mnpos, mn))
-                mx = this
-                mxpos = x[i]
-                lookformax = True
-    return np.array(maxtab), np.array(mintab)
-
 
 def peakdet(v: ArrayLike, delta: float) -> tuple[np.ndarray, np.ndarray]:
     """
