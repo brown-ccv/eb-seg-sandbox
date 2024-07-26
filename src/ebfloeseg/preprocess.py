@@ -11,6 +11,15 @@ from ebfloeseg.masking import maskrgb, mask_image
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
 from ebfloeseg.utils import write_mask_values, get_wcuts
 
+def get_remove_small_mask(watershed, it):
+    area_lim = (it) ** 4
+    props = skimage.measure.regionprops_table(
+        watershed, properties=["label", "area"]
+    )
+    df = pd.DataFrame.from_dict(props)
+    mask = np.isin(watershed, df[df.area < area_lim].label.values)
+    return mask
+
 
 def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
     if erosion_kernel_type == "diamond":
@@ -135,13 +144,8 @@ def preprocess(
         mask_image(watershed, ~ice_mask, 1)
 
         # get rid of ones that are too small
-        area_lim = (it) ** 4
-        props = skimage.measure.regionprops_table(
-            watershed, properties=["label", "area"]
-        )
-        df = pd.DataFrame.from_dict(props)
-        condition = np.isin(watershed, df[df.area < area_lim].label.values)
-        mask_image(watershed, condition, 1)
+        mask = get_remove_small_mask(watershed, it)
+        mask_image(watershed, mask, 1)
 
         if save_figs:
             fname = f"identification_round_{r}.tif"
