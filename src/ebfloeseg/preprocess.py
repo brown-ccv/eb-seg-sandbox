@@ -13,6 +13,16 @@ from ebfloeseg.utils import write_mask_values
 from ebfloeseg.peakdet import peakdet, _peakdet
 
 
+def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
+    if erosion_kernel_type == "diamond":
+        erosion_kernel = diamond(erosion_kernel_size)
+    elif erosion_kernel_type == "ellipse":
+        erosion_kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
+        )
+    return erosion_kernel
+
+
 def preprocess(
     tci,
     cloud_mask,
