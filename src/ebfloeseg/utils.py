@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,7 +66,7 @@ def getsat(fname: str) -> str:
     return fname.split("_")[-1].split(".")[0]
 
 
-def getmeta(fname: str) -> tuple[str, str, str]:
+def getmeta(fname: str | Path) -> tuple[str, str, str]:
     """
     Retrieves the metadata information from the given file name.
 
@@ -75,6 +76,9 @@ def getmeta(fname: str) -> tuple[str, str, str]:
     Returns:
     tuple[str, str, str]: A tuple containing the day of year (doy), year, and satellite information.
     """
+    if isinstance(fname, Path):
+        fname = str(fname)
+
     doy = getdoy(fname)
     year = getyear(fname)
     sat = getsat(fname)
@@ -108,7 +112,9 @@ def write_mask_values(
         None
     """
     land_cloud_mask_sum = sum(sum(~(lmd)))
-    fname = save_direc / f"mask_values_{doy}.txt" # added temporarily while testing. TODO: use doy for subdir
+    fname = (
+        save_direc / f"{doy}_mask_values.txt"
+    )  # added temporarily while testing. TODO: use doy for subdir
     ice_mask_sum = sum(sum(ice_mask))
     ratio = ice_mask_sum / land_cloud_mask_sum
     towrite = f"{doy}\t{ice_mask_sum}\t{land_cloud_mask_sum}\t{ratio}\n"
@@ -145,6 +151,7 @@ def get_region_properties(img: ArrayLike, red_c: ArrayLike) -> dict[str, ArrayLi
         ],
     )
     return props
+
 
 def get_wcuts(rmintab, rbins, rmax_n, rn, rhm_high):
     if ~np.any(rmintab):
