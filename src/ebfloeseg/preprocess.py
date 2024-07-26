@@ -49,6 +49,7 @@ def preprocess(
         imsave(tci, rgb_masked, target_dir, doy, "land_cloud_mask_on_rgb.tif")
 
     ## adaptive threshold for ice mask
+    red_masked = rgb_masked[:, :, 0]
     thresh_adaptive = threshold_local(red_c, block_size=399)
 
     # here just determining the min and max values for the adaptive threshold

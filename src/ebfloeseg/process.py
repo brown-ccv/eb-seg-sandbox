@@ -46,11 +46,6 @@ def process(
         tci = rasterio.open(ftci_direc / ftci)
         cloud_mask = create_cloud_mask(fcloud_direc / fcloud)
 
-        # Test refactoring
-        _cloud = rasterio.open(fcloud_direc / fcloud)
-        _cloud_mask = (_cloud.read()[0]) == 255
-        assert np.array_equal(cloud_mask, _cloud_mask)
-
         output, red_c = preprocess(
             tci,
             cloud_mask,
@@ -65,11 +60,6 @@ def process(
             doy,
             year,
         )
-
-        # Test refactoring
-        _red_c = tci.read()[0]
-        assert np.array_equal(red_c, _red_c)
-        # assert False
 
         # saving the props table and label floes tif
         extract_features(output, red_c, target_dir, res, sat)
