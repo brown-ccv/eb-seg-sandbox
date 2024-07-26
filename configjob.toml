@@ -3,7 +3,7 @@
 # data_direc must contain the folders `cloud`, `tci`
 data_direc = "tests/input"
 save_figs = true
-save_direc = "nb_output"                   # directory to save figures
+save_direc = "temp"                   # directory to save figures
 land = "tests/input/reproj_land.tiff" # land mask to use
 
 [erosion]
