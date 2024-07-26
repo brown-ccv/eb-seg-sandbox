@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import numpy as np
 import pandas as pd
 import cv2
@@ -9,7 +11,23 @@ import rasterio
 
 from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
-from ebfloeseg.utils import write_mask_values, get_wcuts, getmeta, getres
+from ebfloeseg.utils import (
+    write_mask_values,
+    get_wcuts,
+    getmeta,
+    getres,
+    get_region_properties,
+)
+
+
+def extract_features(
+    output, red_c, target_dir, res, sat, doy
+):  # adding doy temporarily for testing. TODO: use doy for subdir
+    # fname = target_dir / f"{res}_{sat}_props.csv"
+    fname = target_dir / f"{res}_{sat}_{doy}_props.csv"
+    props = get_region_properties(output, red_c)
+    df = pd.DataFrame.from_dict(props)
+    df.to_csv(fname)
 
 
 def get_remove_small_mask(watershed, it):
@@ -30,7 +48,10 @@ def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
     return erosion_kernel
 
 
-def preprocess(
+logger = getLogger(__name__)
+
+
+def _preprocess(
     ftci,
     fcloud,
     land_mask,
@@ -182,5 +203,48 @@ def preprocess(
 
     # saving the props table
     output = opening(output)
+    extract_features(output, red_c, save_direc, res, sat, doy)
 
-    return output, red_c, res, sat, doy, tci
+    # saving the label floes tif
+    fname = f"{sat}_final.tif"
+    imsave(
+        tci,
+        output,
+        save_direc,
+        doy,
+        fname,
+        count=1,
+        rollaxis=False,
+        as_uint8=True,
+        res=res,
+    )
+
+
+def preprocess(
+    ftci,
+    fcloud,
+    land_mask,
+    itmax,
+    itmin,
+    step,
+    erosion_kernel_type,
+    erosion_kernel_size,
+    save_figs,
+    save_direc,
+):
+    try:
+        _preprocess(
+            ftci,
+            fcloud,
+            land_mask,
+            itmax,
+            itmin,
+            step,
+            erosion_kernel_type,
+            erosion_kernel_size,
+            save_figs,
+            save_direc,
+        )
+    except Exception as e:
+        logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
+        raise
