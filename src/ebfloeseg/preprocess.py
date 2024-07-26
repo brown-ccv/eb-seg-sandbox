@@ -24,7 +24,7 @@ def extract_features(
     output, red_c, target_dir, res, sat, doy
 ):  # adding doy temporarily for testing. TODO: use doy for subdir
     # fname = target_dir / f"{res}_{sat}_props.csv"
-    fname = target_dir / f"{res}_{sat}_{doy}_props.csv"
+    fname = target_dir / f"{res}_{sat}_props.csv"
     props = get_region_properties(output, red_c)
     df = pd.DataFrame.from_dict(props)
     df.to_csv(fname)
@@ -66,6 +66,8 @@ def _preprocess(
     tci = rasterio.open(ftci)
     doy, year, sat = getmeta(fcloud)
     res = getres(doy, year)
+    save_direc = save_direc / doy
+    save_direc.mkdir(exist_ok=True, parents=True)
 
     cloud_mask = create_cloud_mask(fcloud)
 
@@ -74,12 +76,12 @@ def _preprocess(
 
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        fname = f"{doy}_cloud_mask_on_rgb.tif"
+        fname = "cloud_mask_on_rgb.tif"
         imsave(tci, rgb_masked, save_direc, doy, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
-        fname = f"{doy}_land_cloud_mask_on_rgb.tif"
+        fname = "land_cloud_mask_on_rgb.tif"
         imsave(tci, rgb_masked, save_direc, doy, fname)
 
     ## adaptive threshold for ice mask
