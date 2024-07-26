@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
+from dataclasses import dataclass
 from pathlib import Path
-import os
-import tomllib
 from concurrent.futures import ProcessPoolExecutor
+import tomllib
+import typer
 from typing import Optional
 
-import typer
+
+import pandas as pd
 
 from ebfloeseg.masking import create_land_mask
-from ebfloeseg.process import process
-from dataclasses import dataclass
-
+from ebfloeseg.preprocess import preprocess
 
 @dataclass
 class ConfigParams:
@@ -19,11 +19,11 @@ class ConfigParams:
     land: Path
     save_figs: bool
     save_direc: Path
-    erode_itmax: int
-    erode_itmin: int
+    itmax: int
+    itmin: int
     step: int
-    erosion_kernel_type: str
-    erosion_kernel_size: int
+    kernel_type: str
+    kernel_size: int
 
 
 def validate_kernel_type(ctx: typer.Context, value: str) -> str:
@@ -51,11 +51,11 @@ def parse_config_file(config_file: Path) -> ConfigParams:
         "save_direc": None,  # directory to save figures
         "land": None,  # path to land mask image
         "save_figs": False,  # whether to save figures
-        "erode_itmax": 8,  # maximum number of iterations for erosion
-        "erode_itmin": 3,  # (inclusive) minimum number of iterations for erosion
+        "itmax": 8,  # maximum number of iterations for erosion
+        "itmin": 3,  # (inclusive) minimum number of iterations for erosion
         "step": -1,
-        "erosion_kernel_type": "diamond",  # type of kernel (either diamond or ellipse)
-        "erosion_kernel_size": 1,
+        "kernel_type": "diamond",  # type of kernel (either diamond or ellipse)
+        "kernel_size": 1,
     }
 
     erosion = config["erosion"]
@@ -86,34 +86,106 @@ def process_images(
     ),
 ):
 
-    params = parse_config_file(config_file)
-    data_direc = params.data_direc
+    args = parse_config_file(config_file)
 
-    ftci_direc: Path = data_direc / "tci"
-    fcloud_direc: Path = data_direc / "cloud"
-    land_mask = create_land_mask(params.land)
 
-    ftcis = sorted(os.listdir(ftci_direc))
-    fclouds = sorted(os.listdir(fcloud_direc))
-    m = len(fclouds)
+    save_direc = args.save_direc
 
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        executor.map(
-            process,
-            fclouds,
-            ftcis,
-            [fcloud_direc] * m,
-            [ftci_direc] * m,
-            [params.save_figs] * m,
-            [params.save_direc] * m,
-            [land_mask] * m,
-            [params.erode_itmax] * m,
-            [params.erode_itmin] * m,
-            [params.step] * m,
-            [params.erosion_kernel_type] * m,
-            [params.erosion_kernel_size] * m,
-        )
+    # create output directory
+    save_direc.mkdir(exist_ok=True, parents=True)
+
+    # ## land mask
+    # this is the same landmask as the original IFT- can be downloaded w SOIT
+    land_mask = create_land_mask(args.land)
+
+    # ## load files
+    data_direc = args.data_direc
+    ftci_direc = data_direc / "tci/"
+    fcloud_direc = data_direc / "cloud/"
+
+    # option to save figs after each step
+    save_figs = args.save_figs
+
+    ftcis = sorted(Path(ftci_direc).iterdir())
+    fclouds = sorted(Path(fcloud_direc).iterdir())
+
+    with ProcessPoolExecutor() as executor:
+        futures = []
+        for ftci, fcloud in zip(ftcis, fclouds):
+            future = executor.submit(
+                preprocess,
+                ftci,
+                fcloud,
+                land_mask,
+                args.itmax,
+                args.itmin,
+                args.step,
+                args.kernel_type,
+                args.kernel_size,
+                save_figs,
+                save_direc,
+            )
+            futures.append(future)
+
+        # Wait for all threads to complete
+        for future in futures:
+            future.result()
+
+    # tests
+    # -------------------------------------------------------------------
+    def are_equal(p1, p2):
+        return Path(p1).read_bytes() == Path(p2).read_bytes()
+
+    def check_sums(p1, p2):
+        s1 = pd.read_csv(p1).to_numpy().sum()
+        s2 = pd.read_csv(p2).to_numpy().sum()
+        return s1 == s2
+
+    # Check final images
+    def test_output():
+        expdir = Path("tests/expected")
+        # Check final images
+        # -----------------------------------------------------------------
+        f214 = save_direc / "214" / "2012-08-01_terra_final.tif"
+        f214expected = expdir / "214/2012-08-01_214_terra_final.tif"
+        assert are_equal(f214, f214expected)
+        f215expected = expdir / "215/2012-08-02_215_terra_final.tif"
+        f215 = save_direc / "215/2012-08-02_terra_final.tif"
+        assert are_equal(f215, f215expected)
+
+        # Check mask values
+        # -----------------------------------------------------------------
+        maskvalues214 = save_direc / "214/mask_values.txt"
+        maskvalues214expected = expdir / "214/mask_values_2012.txt"
+        assert are_equal(maskvalues214, maskvalues214expected)
+
+        maskvalues215 = save_direc / "215/mask_values.txt"
+        maskvalues215expected = expdir / "215/mask_values_2012.txt"
+        assert are_equal(maskvalues215, maskvalues215expected)
+
+        # Check feature extraction
+        # -----------------------------------------------------------------
+        features214 = save_direc / "214/2012-08-01_terra_props.csv"
+        features214expected = expdir / "214/2012-08-01_terra_props.csv"
+        assert check_sums(features214, features214expected)
+
+        features215 = save_direc / "215/2012-08-02_terra_props.csv"
+        features215expected = expdir / "215/2012-08-02_terra_props.csv"
+        assert check_sums(features215, features215expected)
+
+        # Check intermediate identification rounds
+        # -----------------------------------------------------------------
+        for doy in ['214', '215']:
+            id_rounds = sorted((save_direc / doy).glob("*round*.tif"))
+            expected_rounds = sorted((expdir / doy).glob("*round*.tif"))
+
+            for id_round, expected_round in zip(id_rounds, expected_rounds):
+                assert are_equal(id_round, expected_round)
+
+        print("All tests passed!")
+
+    test_output()
 
 
 if __name__ == "__main__":
-    app()  # pragma: no cover
+    app()
