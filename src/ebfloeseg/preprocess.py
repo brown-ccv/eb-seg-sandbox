@@ -49,11 +49,13 @@ def preprocess(
 
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        imsave(tci, rgb_masked, target_dir, doy, "cloud_mask_on_rgb.tif")
+        fname = f"{doy}_cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, target_dir, doy, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
-        imsave(tci, rgb_masked, target_dir, doy, "land_cloud_mask_on_rgb.tif")
+        fname = f"{doy}_land_cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, target_dir, doy, fname)
 
     ## adaptive threshold for ice mask
     red_masked = rgb_masked[:, :, 0]
