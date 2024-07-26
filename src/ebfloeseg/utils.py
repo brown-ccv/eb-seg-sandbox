@@ -1,14 +1,19 @@
 from datetime import datetime
+from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import skimage
 from numpy.typing import ArrayLike
 
+from ebfloeseg.peakdet import peakdet
 
-def imshow(img: ArrayLike, cmap: str = "gray") -> None:
+
+def imshow(img: ArrayLike, cmap: str = "gray", show: bool = True) -> None:
     plt.imshow(img, cmap=cmap)
     plt.axis("off")
-    plt.show()
+    if show:
+        plt.show()
 
 
 def imopen(path: str) -> None:
@@ -63,7 +68,7 @@ def getsat(fname: str) -> str:
     return fname.split("_")[-1].split(".")[0]
 
 
-def getmeta(fname: str) -> tuple[str, str, str]:
+def getmeta(fname: str | Path) -> tuple[str, str, str]:
     """
     Retrieves the metadata information from the given file name.
 
@@ -73,6 +78,9 @@ def getmeta(fname: str) -> tuple[str, str, str]:
     Returns:
     tuple[str, str, str]: A tuple containing the day of year (doy), year, and satellite information.
     """
+    if isinstance(fname, Path):
+        fname = str(fname)
+
     doy = getdoy(fname)
     year = getyear(fname)
     sat = getsat(fname)
@@ -106,7 +114,9 @@ def write_mask_values(
         None
     """
     land_cloud_mask_sum = sum(sum(~(lmd)))
-    fname = save_direc / f"mask_values_{year}.txt"
+    fname = (
+        save_direc / f"mask_values.txt"
+    )  # added temporarily while testing. TODO: use doy for subdir
     ice_mask_sum = sum(sum(ice_mask))
     ratio = ice_mask_sum / land_cloud_mask_sum
     towrite = f"{doy}\t{ice_mask_sum}\t{land_cloud_mask_sum}\t{ratio}\n"
@@ -143,3 +153,26 @@ def get_region_properties(img: ArrayLike, red_c: ArrayLike) -> dict[str, ArrayLi
         ],
     )
     return props
+
+
+def get_wcuts(red_masked):
+    bins = np.arange(1, 256, 5)
+    rn, rbins = np.histogram(red_masked.flatten(), bins=bins)
+    dx = 0.01 * np.mean(rn)
+    rmaxtab, rmintab = peakdet(rn, dx)
+    rmax_n = rbins[rmaxtab[-1, 0]]
+    rhm_high = rmaxtab[-1, 1] / 2
+
+    if ~np.any(rmintab):
+        ow_cut_min = 100
+    else:
+        ow_cut_min = rbins[rmintab[-1, 0]]
+
+    if np.any(np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))):
+        ow_cut_max = rbins[
+            np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))[0][-1]
+        ]  # fwhm to left of ice max
+    else:
+        ow_cut_max = rmax_n - 10
+
+    return ow_cut_min, ow_cut_max, bins

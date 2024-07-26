@@ -17,7 +17,7 @@ def test_imsave(tmp_path):
 
         # test with res provided
         imsave(tci, img, tmp_path, "doy", "fnameres", count=3, res="res")
-        assert tmp_path.joinpath("res_doy_fnameres").exists()
+        assert tmp_path.joinpath("res_fnameres").exists()
 
         # test with as_uint8
         imsave(

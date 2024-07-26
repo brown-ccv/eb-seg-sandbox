@@ -1,143 +1,180 @@
+from logging import getLogger
+
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import cv2
 from scipy import ndimage
 import skimage
 from skimage.filters import threshold_local
-from skimage.morphology import diamond, opening, dilation, binary_dilation
+from skimage.morphology import diamond, opening
+import rasterio
 
-from ebfloeseg.masking import maskrgb, mask_image
-from ebfloeseg.savefigs import imsave
-from ebfloeseg.utils import write_mask_values
-from ebfloeseg.peakdet import peakdet
+from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
+from ebfloeseg.savefigs import imsave, save_ice_mask_hist
+from ebfloeseg.utils import (
+    write_mask_values,
+    get_wcuts,
+    getmeta,
+    getres,
+    get_region_properties,
+)
 
 
-def preprocess(
-    tci,
-    cloud_mask,
+def extract_features(
+    output, red_c, target_dir, res, sat, doy
+):  # adding doy temporarily for testing. TODO: use doy for subdir
+    # fname = target_dir / f"{res}_{sat}_props.csv"
+    fname = target_dir / f"{res}_{sat}_props.csv"
+    props = get_region_properties(output, red_c)
+    df = pd.DataFrame.from_dict(props)
+    df.to_csv(fname)
+
+
+def get_remove_small_mask(watershed, it):
+    area_lim = (it) ** 4
+    props = skimage.measure.regionprops_table(watershed, properties=["label", "area"])
+    df = pd.DataFrame.from_dict(props)
+    mask = np.isin(watershed, df[df.area < area_lim].label.values)
+    return mask
+
+
+def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
+    if erosion_kernel_type == "diamond":
+        erosion_kernel = diamond(erosion_kernel_size)
+    elif erosion_kernel_type == "ellipse":
+        erosion_kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
+        )
+    return erosion_kernel
+
+
+logger = getLogger(__name__)
+
+
+def _preprocess(
+    ftci,
+    fcloud,
     land_mask,
+    itmax,
+    itmin,
+    step,
     erosion_kernel_type,
     erosion_kernel_size,
-    erode_itmax,
-    erode_itmin,
-    step,
     save_figs,
-    target_dir,
-    doy,
-    year,
+    save_direc,
 ):
-    # Reshape tci to RGB (3, x, y) => (x, y, 3)
-    red_c, green_c, blue_c = tci.read()
-    rgb = np.dstack([red_c, green_c, blue_c])
+    tci = rasterio.open(ftci)
+    doy, year, sat = getmeta(fcloud)
+    res = getres(doy, year)
+    save_direc = save_direc / doy
+    save_direc.mkdir(exist_ok=True, parents=True)
 
-    maskrgb(rgb, cloud_mask)
-    if save_figs:
-        imsave(tci, rgb, target_dir, doy, "cloud_mask_on_rgb.tif")
+    cloud_mask = create_cloud_mask(fcloud)
 
-    maskrgb(rgb, land_mask)
+    red_c, green_c, blue_c = tci.read()  # these are different than the layers in rgb
+    rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
+
+    maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        imsave(tci, rgb, target_dir, doy, "land_cloud_mask_on_rgb.tif")
+        fname = "cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, save_direc, doy, fname)
+
+    maskrgb(rgb_masked, land_mask)
+    if save_figs:
+        fname = "land_cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, save_direc, doy, fname)
 
     ## adaptive threshold for ice mask
+    red_masked = rgb_masked[:, :, 0]
     thresh_adaptive = threshold_local(red_c, block_size=399)
-    image = red_masked = rgb[:, :, 0]
 
     # here just determining the min and max values for the adaptive threshold
-    binz = np.arange(1, 256, 5)
-    rn, rbins = np.histogram(red_masked.flatten(), bins=binz)
-    dx = 0.01 * np.mean(rn)
-    rmaxtab, rmintab = peakdet(rn, dx)
-    rmax_n = rbins[rmaxtab[-1, 0]]
-    rhm_high = rmaxtab[-1, 1] / 2
-
-    ow_cut_min = 100 if ~np.any(rmintab) else rbins[rmintab[-1, 0]]
-
-    ow_cut_max_cond = np.where(
-        (rbins[:-1] < rmax_n) & (rn <= rhm_high)
-    )  # TODO: add comment
-    if np.any(ow_cut_max_cond):
-        ow_cut_max = rbins[ow_cut_max_cond[0][-1]]  # fwhm to left of ice max
-    else:
-        ow_cut_max = rmax_n - 10
+    ow_cut_min, ow_cut_max, bins = get_wcuts(red_masked)
 
     if save_figs:
-        fig, ax = plt.subplots(1, 1, figsize=(6, 2))
-        plt.hist(red_masked.flatten(), bins=binz, color="r")
-        plt.axvline(ow_cut_max)
-        plt.axvline(ow_cut_min)
-        plt.savefig(target_dir / "ice_mask_hist.png")
+        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, save_direc)
 
-    # mask thresh_adaptive
-    mask_image(thresh_adaptive, thresh_adaptive < ow_cut_min, ow_cut_min)
-    mask_image(thresh_adaptive, thresh_adaptive > ow_cut_max, ow_cut_max)
+    thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
-    ice_mask = image > thresh_adaptive
-    lmd = land_mask + cloud_mask
+    ice_mask = red_masked > thresh_adaptive
 
+    # a simple text file with columns: 'doy','ice_area','unmasked','sic'
     write_mask_values(
-        land_mask, lmd, ice_mask, doy, year, target_dir
-    )  # Should this be done conditionally? CP
+        land_mask, land_mask + cloud_mask, ice_mask, doy, year, save_direc
+    )
 
     # saving ice mask
     if save_figs:
         imsave(
             tci,
             ice_mask,
-            target_dir,
+            save_direc,
             doy,
             "ice_mask_bw.tif",
             count=1,
             rollaxis=False,
             as_uint8=True,
+            res=res,
         )
 
     # here dilating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    lmd = binary_dilation(lmd.astype(int), diamond(10))
+    land_cloud_mask = (land_mask + cloud_mask).astype(int)
+    land_cloud_mask_dilated = skimage.morphology.binary_dilation(
+        land_cloud_mask, diamond(10)
+    )
 
     # setting up different kernel for erosion-expansion algo
-    if erosion_kernel_type == "diamond":
-        kernel_er = diamond(erosion_kernel_size)
-    elif erosion_kernel_type == "ellipse":
-        kernel_er = cv2.getStructuringElement(
-            cv2.MORPH_ELLIPSE, tuple([erosion_kernel_size] * 2)
-        )
+    erosion_kernel = get_erosion_kernel(erosion_kernel_type, erosion_kernel_size)
 
-    output = np.zeros(np.shape(ice_mask))
-    inpuint8 = ice_mask.astype(np.uint8)
-
-    for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
+    # TODO: clarify this block
+    inp = ice_mask
+    input_no = ice_mask
+    output = np.zeros((np.shape(ice_mask)))
+    itmax = itmax
+    itmin = itmin
+    step = step
+    for r, it in enumerate(range(itmax, itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(inpuint8, kernel_er, iterations=it).astype(np.uint8)
-        eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
+        eroded_ice_mask = cv2.erode(inp.astype(np.uint8), erosion_kernel, iterations=it)
+        eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask.astype(np.uint8))
 
-        dilated_ice_mask = cv2.dilate(inpuint8, kernel_er, iterations=it).astype(
-            np.uint8
+        dilated_ice_mask = cv2.dilate(
+            inp.astype(np.uint8), erosion_kernel, iterations=it
         )
 
         # label floes remaining after erosion
-        ret, markers = cv2.connectedComponents(eroded_ice_mask)
+        ret, markers = cv2.connectedComponents(eroded_ice_mask.astype(np.uint8))
 
         # Add one to all labels so that sure background is not 0, but 1
         markers = markers + 1
 
-        unknown = cv2.subtract(dilated_ice_mask, eroded_ice_mask)
+        unknown = cv2.subtract(
+            dilated_ice_mask.astype(np.uint8), eroded_ice_mask.astype(np.uint8)
+        )
 
         # Now, mark the region of unknown with zero
+        # markers[unknown == 255] = 0
         mask_image(markers, unknown == 255, 0)
 
         # dilate each marker
-        for _ in np.arange(0, it + 1):
-            markers = dilation(markers, kernel_er)
+        for a in np.arange(0, it + 1, 1):
+            markers = skimage.morphology.dilation(markers, erosion_kernel)
 
         # rewatershed
-        watershed = cv2.watershed(rgb, markers)
+        watershed = cv2.watershed(rgb_masked, markers)
 
         # get rid of floes that intersect the dilated land mask
-        watershed[np.isin(watershed, np.unique(watershed[(lmd) & (watershed > 1)]))] = 1
+        watershed[
+            np.isin(
+                watershed,
+                np.unique(watershed[land_cloud_mask_dilated & (watershed > 1)]),
+            )
+        ] = 1
 
+        # pdb.set_trace()
         # set the open water and already identified floes to no
-        watershed[~ice_mask] = 1
+        # watershed[~input_no] = 1
+        mask_image(watershed, ~input_no, 1)
 
         # get rid of ones that are too small
         area_lim = (it) ** 4
@@ -152,17 +189,64 @@ def preprocess(
             imsave(
                 tci,
                 watershed,
-                target_dir,
+                save_direc,
                 doy,
                 fname,
                 count=1,
                 rollaxis=False,
                 as_uint8=True,
+                res=res,
             )
 
+        input_no = ice_mask + inp
+        inp = (watershed == 1) & (inp == 1) & ice_mask
         watershed[watershed < 2] = 0
-        output = watershed + output
+        output += watershed
 
+    # saving the props table
     output = opening(output)
+    extract_features(output, red_c, save_direc, res, sat, doy)
 
-    return output, red_c
+    # saving the label floes tif
+    fname = f"{sat}_final.tif"
+    imsave(
+        tci,
+        output,
+        save_direc,
+        doy,
+        fname,
+        count=1,
+        rollaxis=False,
+        as_uint8=True,
+        res=res,
+    )
+
+
+def preprocess(
+    ftci,
+    fcloud,
+    land_mask,
+    itmax,
+    itmin,
+    step,
+    erosion_kernel_type,
+    erosion_kernel_size,
+    save_figs,
+    save_direc,
+):
+    try:
+        _preprocess(
+            ftci,
+            fcloud,
+            land_mask,
+            itmax,
+            itmin,
+            step,
+            erosion_kernel_type,
+            erosion_kernel_size,
+            save_figs,
+            save_direc,
+        )
+    except Exception as e:
+        logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
+        raise

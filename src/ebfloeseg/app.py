@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
+from dataclasses import dataclass
 from pathlib import Path
-import os
-import tomllib
 from concurrent.futures import ProcessPoolExecutor
-
+import tomllib
 import typer
+from typing import Optional
+
+
+import pandas as pd
 
 from ebfloeseg.masking import create_land_mask
-from ebfloeseg.process import process
-from dataclasses import dataclass
+from ebfloeseg.preprocess import preprocess
 
 
 @dataclass
@@ -18,11 +20,11 @@ class ConfigParams:
     land: Path
     save_figs: bool
     save_direc: Path
-    erode_itmax: int
-    erode_itmin: int
+    itmax: int
+    itmin: int
     step: int
-    erosion_kernel_type: str
-    erosion_kernel_size: int
+    kernel_type: str
+    kernel_size: int
 
 
 def validate_kernel_type(ctx: typer.Context, value: str) -> str:
@@ -50,11 +52,11 @@ def parse_config_file(config_file: Path) -> ConfigParams:
         "save_direc": None,  # directory to save figures
         "land": None,  # path to land mask image
         "save_figs": False,  # whether to save figures
-        "erode_itmax": 8,  # maximum number of iterations for erosion
-        "erode_itmin": 3,  # (inclusive) minimum number of iterations for erosion
+        "itmax": 8,  # maximum number of iterations for erosion
+        "itmin": 3,  # (inclusive) minimum number of iterations for erosion
         "step": -1,
-        "erosion_kernel_type": "diamond",  # type of kernel (either diamond or ellipse)
-        "erosion_kernel_size": 1,
+        "kernel_type": "diamond",  # type of kernel (either diamond or ellipse)
+        "kernel_size": 1,
     }
 
     erosion = config["erosion"]
@@ -79,36 +81,56 @@ def process_images(
         "-c",
         help="Path to configuration file",
     ),
+    max_workers: Optional[int] = typer.Option(
+        None,
+        help="The maximum number of workers. If None, uses all available processors.",
+    ),
 ):
 
-    params = parse_config_file(config_file)
-    data_direc = params.data_direc
+    args = parse_config_file(config_file)
 
-    ftci_direc: Path = data_direc / "tci"
-    fcloud_direc: Path = data_direc / "cloud"
-    land_mask = create_land_mask(params.land)
+    save_direc = args.save_direc
 
-    ftcis = sorted(os.listdir(ftci_direc))
-    fclouds = sorted(os.listdir(fcloud_direc))
-    m = len(fclouds)
+    # create output directory
+    save_direc.mkdir(exist_ok=True, parents=True)
+
+    # ## land mask
+    # this is the same landmask as the original IFT- can be downloaded w SOIT
+    land_mask = create_land_mask(args.land)
+
+    # ## load files
+    data_direc = args.data_direc
+    ftci_direc = data_direc / "tci/"
+    fcloud_direc = data_direc / "cloud/"
+
+    # option to save figs after each step
+    save_figs = args.save_figs
+
+    ftcis = sorted(Path(ftci_direc).iterdir())
+    fclouds = sorted(Path(fcloud_direc).iterdir())
 
     with ProcessPoolExecutor() as executor:
-        executor.map(
-            process,
-            fclouds,
-            ftcis,
-            [fcloud_direc] * m,
-            [ftci_direc] * m,
-            [params.save_figs] * m,
-            [params.save_direc] * m,
-            [land_mask] * m,
-            [params.erode_itmax] * m,
-            [params.erode_itmin] * m,
-            [params.step] * m,
-            [params.erosion_kernel_type] * m,
-            [params.erosion_kernel_size] * m,
-        )
+        futures = []
+        for ftci, fcloud in zip(ftcis, fclouds):
+            future = executor.submit(
+                preprocess,
+                ftci,
+                fcloud,
+                land_mask,
+                args.itmax,
+                args.itmin,
+                args.step,
+                args.kernel_type,
+                args.kernel_size,
+                save_figs,
+                save_direc,
+            )
+            futures.append(future)
+
+        # Wait for all threads to complete
+        for future in futures:
+            future.result()
 
 
 if __name__ == "__main__":
-    app()  # pragma: no cover
+    app()

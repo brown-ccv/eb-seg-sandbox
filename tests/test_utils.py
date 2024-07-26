@@ -1,7 +1,15 @@
-from ebfloeseg.utils import *
 import numpy as np
-import tempfile
-from pathlib import Path
+
+from ebfloeseg.utils import (
+    write_mask_values,
+    get_region_properties,
+    imshow,
+    getdoy,
+    getyear,
+    getsat,
+    getmeta,
+    getres,
+)
 
 f1 = "cloud_2012-08-01_214_terra.tiff"
 f2 = "tci_2013-08-04_217_terra.tiff"
@@ -32,25 +40,23 @@ def test_getres():
     assert getres("217", "2012") == "2012-08-04"
 
 
-def test_write_mask_values():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        land_mask = np.ones((3, 3))
-        lmd = np.ones((3, 3))
-        ice_mask = np.ones((3, 3))
-        doy = "214"
-        year = "2012"
-        save_direc = Path(temp_dir)
-        write_mask_values(
-            land_mask.astype(int),
-            lmd.astype(int),
-            ice_mask.astype(int),
-            doy,
-            year,
-            save_direc,
-        )
+def test_write_mask_values(tmpdir):
+    land_mask = np.ones((3, 3))
+    lmd = np.ones((3, 3))
+    ice_mask = np.ones((3, 3))
+    doy = "214"
+    year = "2012"
+    write_mask_values(
+        land_mask.astype(int),
+        lmd.astype(int),
+        ice_mask.astype(int),
+        doy,
+        year,
+        tmpdir,
+    )
 
-        with open(save_direc / "mask_values_2012.txt", "r") as f:
-            assert f.readline() == "214\t9\t-18\t-0.5\n"
+    with open(tmpdir / "mask_values.txt", "r") as f:
+        assert f.readline() == "214\t9\t-18\t-0.5\n"
 
 
 def test_get_region_properties():
@@ -64,5 +70,5 @@ def test_get_region_properties():
 
 def test_imshow():
     img = np.random.choice([False, True], size=(1, 1))
-    imshow(img)
+    imshow(img, show=False)
     assert True
