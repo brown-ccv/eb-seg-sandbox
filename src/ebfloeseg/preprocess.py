@@ -160,7 +160,6 @@ def preprocess(
                 as_uint8=True,
             )
 
-        # watershed[watershed < 2] = 0
         mask_image(watershed, watershed < 2, 0)
         output += watershed
 
