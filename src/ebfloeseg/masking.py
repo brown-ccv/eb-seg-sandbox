@@ -31,10 +31,7 @@ def create_land_mask(lmfile: Path, val: int = 75) -> NDArray[np.bool_]:
     Returns:
     NDArray[np.bool_]: The land mask as a boolean NumPy array.
     """
-    try:
-        s = rasterio.open(lmfile)
-    except rasterio._err.CPLE_OpenFailedError:
-        raise FileNotFoundError(f"Could not open file {lmfile}")
+    s = rasterio.open(lmfile)
     land_mask = (s.read()[0]) == val
     return land_mask
 
