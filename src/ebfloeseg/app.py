@@ -5,7 +5,6 @@ import os
 import tomllib
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional
-from typing import Optional
 
 import typer
 

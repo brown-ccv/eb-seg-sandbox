@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import matplotlib.pyplot as plt
+import numpy as np
 import skimage
 from numpy.typing import ArrayLike
 
@@ -144,3 +145,18 @@ def get_region_properties(img: ArrayLike, red_c: ArrayLike) -> dict[str, ArrayLi
         ],
     )
     return props
+
+def get_wcuts(rmintab, rbins, rmax_n, rn, rhm_high):
+    if ~np.any(rmintab):
+        ow_cut_min = 100
+    else:
+        ow_cut_min = rbins[rmintab[-1, 0]]
+
+    if np.any(np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))):
+        ow_cut_max = rbins[
+            np.where((rbins[:-1] < rmax_n) & (rn <= rhm_high))[0][-1]
+        ]  # fwhm to left of ice max
+    else:
+        ow_cut_max = rmax_n - 10
+
+    return ow_cut_min, ow_cut_max

@@ -8,7 +8,7 @@ from skimage.filters import threshold_local
 from skimage.morphology import diamond, opening, dilation, binary_dilation
 
 from ebfloeseg.masking import maskrgb, mask_image
-from ebfloeseg.savefigs import imsave
+from ebfloeseg.savefigs import imsave, save_ice_mask_hist
 from ebfloeseg.utils import write_mask_values
 from ebfloeseg.peakdet import peakdet, _peakdet
 
@@ -116,12 +116,7 @@ def preprocess(
     # assert False
 
     if save_figs:
-        # TODO: move to a function save_ice_mask_hist
-        fig, ax = plt.subplots(1, 1, figsize=(6, 2))
-        plt.hist(red_masked.flatten(), bins=binz, color="r")
-        plt.axvline(ow_cut_max)
-        plt.axvline(ow_cut_min)
-        plt.savefig(target_dir / "ice_mask_hist.png")
+        save_ice_mask_hist(red_masked, binz, ow_cut_min, ow_cut_max, doy, target_dir)
 
     # mask thresh_adaptive
     mask_image(thresh_adaptive, thresh_adaptive < ow_cut_min, ow_cut_min)
