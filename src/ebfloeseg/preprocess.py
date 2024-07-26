@@ -4,11 +4,12 @@ import cv2
 from scipy import ndimage
 import skimage
 from skimage.filters import threshold_local
-from skimage.morphology import diamond, opening, dilation, binary_dilation
+from skimage.morphology import diamond, opening
+import rasterio
 
-from ebfloeseg.masking import maskrgb, mask_image
+from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
-from ebfloeseg.utils import write_mask_values, get_wcuts
+from ebfloeseg.utils import write_mask_values, get_wcuts, getmeta, getres
 
 
 def get_remove_small_mask(watershed, it):
@@ -30,32 +31,35 @@ def get_erosion_kernel(erosion_kernel_type="diamond", erosion_kernel_size=1):
 
 
 def preprocess(
-    tci,
-    cloud_mask,
+    ftci,
+    fcloud,
     land_mask,
+    itmax,
+    itmin,
+    step,
     erosion_kernel_type,
     erosion_kernel_size,
-    erode_itmax,
-    erode_itmin,
-    step,
     save_figs,
-    target_dir,
-    doy,
-    year,
+    save_direc,
 ):
-    # Reshape tci to RGB (3, x, y) => (x, y, 3)
-    red_c, green_c, blue_c = tci.read()
+    tci = rasterio.open(ftci)
+    doy, year, sat = getmeta(fcloud)
+    res = getres(doy, year)
+
+    cloud_mask = create_cloud_mask(fcloud)
+
+    red_c, green_c, blue_c = tci.read()  # these are different than the layers in rgb
     rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
 
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
         fname = f"{doy}_cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, target_dir, doy, fname)
+        imsave(tci, rgb_masked, save_direc, doy, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
         fname = f"{doy}_land_cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, target_dir, doy, fname)
+        imsave(tci, rgb_masked, save_direc, doy, fname)
 
     ## adaptive threshold for ice mask
     red_masked = rgb_masked[:, :, 0]
@@ -65,90 +69,118 @@ def preprocess(
     ow_cut_min, ow_cut_max, bins = get_wcuts(red_masked)
 
     if save_figs:
-        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, target_dir)
+        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, save_direc)
 
-    # clamp thresh_adaptive
     thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
     ice_mask = red_masked > thresh_adaptive
 
-    land_cloud_mask = land_mask + cloud_mask
+    # a simple text file with columns: 'doy','ice_area','unmasked','sic'
     write_mask_values(
-        land_mask, land_cloud_mask, ice_mask, doy, year, target_dir
-    )  # Should this be done conditionally? CP
+        land_mask, land_mask + cloud_mask, ice_mask, doy, year, save_direc
+    )
 
     # saving ice mask
     if save_figs:
         imsave(
             tci,
             ice_mask,
-            target_dir,
+            save_direc,
             doy,
             "ice_mask_bw.tif",
             count=1,
             rollaxis=False,
             as_uint8=True,
+            res=res,
         )
 
     # here dilating the land and cloud mask so any floes that are adjacent to the mask can be removed later
-    land_cloud_mask_dilated = binary_dilation(land_cloud_mask.astype(int), diamond(10))
+    land_cloud_mask = (land_mask + cloud_mask).astype(int)
+    land_cloud_mask_dilated = skimage.morphology.binary_dilation(
+        land_cloud_mask, diamond(10)
+    )
 
-    # TODO: move to a function erosion_expansion_algo
     # setting up different kernel for erosion-expansion algo
     erosion_kernel = get_erosion_kernel(erosion_kernel_type, erosion_kernel_size)
-    output = np.zeros(np.shape(ice_mask))
-    ice_mask_uint8 = ice_mask.astype(np.uint8)
-    for r, it in enumerate(range(erode_itmax, erode_itmin - 1, step)):
+
+    # TODO: clarify this block
+    inp = ice_mask
+    input_no = ice_mask
+    output = np.zeros((np.shape(ice_mask)))
+    itmax = itmax
+    itmin = itmin
+    step = step
+    for r, it in enumerate(range(itmax, itmin - 1, step)):
         # erode a lot at first, decrease number of iterations each time
-        eroded_ice_mask = cv2.erode(ice_mask_uint8, erosion_kernel, iterations=it)
-        eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask).astype(np.uint8)
-        dilated_ice_mask = cv2.dilate(ice_mask_uint8, erosion_kernel, iterations=it)
+        eroded_ice_mask = cv2.erode(inp.astype(np.uint8), erosion_kernel, iterations=it)
+        eroded_ice_mask = ndimage.binary_fill_holes(eroded_ice_mask.astype(np.uint8))
+
+        dilated_ice_mask = cv2.dilate(
+            inp.astype(np.uint8), erosion_kernel, iterations=it
+        )
 
         # label floes remaining after erosion
-        ret, markers = cv2.connectedComponents(eroded_ice_mask)
+        ret, markers = cv2.connectedComponents(eroded_ice_mask.astype(np.uint8))
 
-        unknown = cv2.subtract(dilated_ice_mask, eroded_ice_mask)
         # Add one to all labels so that sure background is not 0, but 1
         markers = markers + 1
+
+        unknown = cv2.subtract(
+            dilated_ice_mask.astype(np.uint8), eroded_ice_mask.astype(np.uint8)
+        )
+
         # Now, mark the region of unknown with zero
+        # markers[unknown == 255] = 0
         mask_image(markers, unknown == 255, 0)
 
         # dilate each marker
-        for _ in np.arange(0, it + 1):
-            markers = dilation(markers, erosion_kernel)
+        for a in np.arange(0, it + 1, 1):
+            markers = skimage.morphology.dilation(markers, erosion_kernel)
 
         # rewatershed
         watershed = cv2.watershed(rgb_masked, markers)
 
-        # get rid of floes that intersect the dilated land mask (WARNING: cloud mask already included)
-        condition = np.isin(
-            watershed, np.unique(watershed[land_cloud_mask_dilated & (watershed > 1)])
-        )
-        mask_image(watershed, condition, 1)
+        # get rid of floes that intersect the dilated land mask
+        watershed[
+            np.isin(
+                watershed,
+                np.unique(watershed[land_cloud_mask_dilated & (watershed > 1)]),
+            )
+        ] = 1
 
+        # pdb.set_trace()
         # set the open water and already identified floes to no
-        mask_image(watershed, ~ice_mask, 1)
+        # watershed[~input_no] = 1
+        mask_image(watershed, ~input_no, 1)
 
         # get rid of ones that are too small
-        mask = get_remove_small_mask(watershed, it)
-        mask_image(watershed, mask, 1)
+        area_lim = (it) ** 4
+        props = skimage.measure.regionprops_table(
+            watershed, properties=["label", "area"]
+        )
+        df = pd.DataFrame.from_dict(props)
+        watershed[np.isin(watershed, df[df.area < area_lim].label.values)] = 1
 
         if save_figs:
             fname = f"identification_round_{r}.tif"
             imsave(
                 tci,
                 watershed,
-                target_dir,
+                save_direc,
                 doy,
                 fname,
                 count=1,
                 rollaxis=False,
                 as_uint8=True,
+                res=res,
             )
 
-        mask_image(watershed, watershed < 2, 0)
+        input_no = ice_mask + inp
+        inp = (watershed == 1) & (inp == 1) & ice_mask
+        watershed[watershed < 2] = 0
         output += watershed
 
+    # saving the props table
     output = opening(output)
 
-    return output, red_c
+    return output, red_c, res, sat, doy, tci
