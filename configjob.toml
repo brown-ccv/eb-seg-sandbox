@@ -3,12 +3,12 @@
 # data_direc must contain the folders `cloud`, `tci`
 data_direc = "tests/input"
 save_figs = true
-save_direc = "temp"                   # directory to save figures
+save_direc = "nb_output"                   # directory to save figures
 land = "tests/input/reproj_land.tiff" # land mask to use
 
 [erosion]
-erode_itmax = 8                 # maximum number of iterations for erosion
-erode_itmin = 3                 # (inclusive) minimum number of iterations for erosion
+itmax = 8                 # maximum number of iterations for erosion
+itmin = 3                 # (inclusive) minimum number of iterations for erosion
 step = -1
-erosion_kernel_type = "diamond" # "ellipse" also supported
-erosion_kernel_size = 1
+kernel_type = "diamond" # "ellipse" also supported
+kernel_size = 1
