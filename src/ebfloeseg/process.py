@@ -3,7 +3,6 @@ from logging import getLogger
 
 import rasterio
 import pandas as pd
-import numpy as np  # for testing
 
 from ebfloeseg.utils import getmeta, getres, get_region_properties
 from ebfloeseg.masking import create_cloud_mask
