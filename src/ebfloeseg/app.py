@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 import tomllib
 import typer
-from typing import Optional
+from typing import Annotated, Optional
 
 
 import pandas as pd
@@ -35,7 +36,7 @@ def validate_kernel_type(ctx: typer.Context, value: str) -> str:
 
 help = "TODO: add description"
 name = "fsdproc"
-epilog = f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landfile"
+epilog = f"Example: {name} --data-direc input/ input/land.tiff output/ --save-figs --itmax 8 --itmin 3 --kernel-type diamond"
 app = typer.Typer(name=name, add_completion=False)
 
 
@@ -72,58 +73,60 @@ def parse_config_file(config_file: Path) -> ConfigParams:
 
     return ConfigParams(**defaults)
 
+class KernelType(str, Enum):
+    diamond = "diamond"
+    ellipse = "ellipse"
+
 
 @app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
-    config_file: Path = typer.Option(
-        ...,
-        "--config-file",
-        "-c",
-        help="Path to configuration file",
-    ),
-    max_workers: Optional[int] = typer.Option(
-        None,
+    
+    in_dir: Annotated[Path, typer.Argument(help="directory containing input files")],
+    mask: Annotated[Path, typer.Argument(help="path to land mask file")],
+    out_dir: Annotated[Path, typer.Argument(help="directory for outputs")],
+    save_figs: Annotated[bool, typer.Option(..., "--save-figs", help="save figures")] = False,
+    itmax: Annotated[int, typer.Option(..., "--itmax", help="maximum number of iterations for erosion")] = 8,
+    itmin: Annotated[int, typer.Option(..., "--itmin", help="minimum number of iterations for erosion")] = 3,
+    step: Annotated[int, typer.Option(..., "--step")] = -1,
+    kernel_type: Annotated[KernelType, typer.Option(..., "--kernel-type")] = KernelType.diamond,
+    kernel_size: Annotated[int, typer.Option(..., "--kernel-size")] = 1,
+    max_workers: Annotated[Optional[int], typer.Option(
         help="The maximum number of workers. If None, uses all available processors.",
-    ),
+    )] = 1,
 ):
-
-    args = parse_config_file(config_file)
-
-    save_direc = args.save_direc
-
     # create output directory
-    save_direc.mkdir(exist_ok=True, parents=True)
+    out_dir.mkdir(exist_ok=True, parents=True)
 
-    # ## land mask
+    # land mask
     # this is the same landmask as the original IFT- can be downloaded w SOIT
-    land_mask = create_land_mask(args.land)
+    land_mask_ = create_land_mask(mask)
 
-    # ## load files
-    data_direc = args.data_direc
+    # load files
+    data_direc = in_dir
     ftci_direc = data_direc / "tci/"
     fcloud_direc = data_direc / "cloud/"
 
     # option to save figs after each step
-    save_figs = args.save_figs
+    save_figs = save_figs
 
     ftcis = sorted(Path(ftci_direc).iterdir())
     fclouds = sorted(Path(fcloud_direc).iterdir())
 
-    with ProcessPoolExecutor() as executor:
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for ftci, fcloud in zip(ftcis, fclouds):
             future = executor.submit(
                 preprocess,
                 ftci,
                 fcloud,
-                land_mask,
-                args.itmax,
-                args.itmin,
-                args.step,
-                args.kernel_type,
-                args.kernel_size,
+                land_mask_,
+                itmax,
+                itmin,
+                step,
+                kernel_type,
+                kernel_size,
                 save_figs,
-                save_direc,
+                out_dir,
             )
             futures.append(future)
 

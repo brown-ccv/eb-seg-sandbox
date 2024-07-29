@@ -16,9 +16,14 @@
 
     [[load_files]]
         script = """
-            ln -s $CYLC_WORKFLOW_RUN_DIR/tests/input/. $CYLC_WORKFLOW_SHARE_DIR/data
+            ln -s $CYLC_WORKFLOW_RUN_DIR/tests/input/. $CYLC_WORKFLOW_SHARE_DIR/input
         """
 
     [[preprocess]]
-
-        script = "pwd; python -m ebfloeseg.app --config-file $CYLC_WORKFLOW_RUN_DIR/configjob.toml"
+        script = """
+        python -m ebfloeseg.app $CYLC_WORKFLOW_SHARE_DIR/input \
+                                $CYLC_WORKFLOW_SHARE_DIR/input/reproj_land.tiff \
+                                $CYLC_WORKFLOW_SHARE_DIR/output \
+                                --save-figs \
+                                --itmax 8 --itmin 3 --step -1 --kernel-type diamond --kernel-size 1
+        """
