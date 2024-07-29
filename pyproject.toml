@@ -4,7 +4,6 @@ dynamic = ["version"]
 description = "Icefloe segmentation by Buckley"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE.txt" }
 keywords = [
   "earth observation",
   "modis",
@@ -68,8 +67,11 @@ fsdproc = "ebfloeseg.app:app"
 where = ["src"]
 
 [build-system]
-requires = ["setuptools>=43.0.0", "setuptools_scm>=8", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.pytest.ini_options]
 markers = [
