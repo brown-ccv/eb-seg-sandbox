@@ -83,30 +83,20 @@ def group_files_by_extension(folder_path):
 @pytest.mark.smoke
 @pytest.mark.slow
 def test_fsdproc(tmpdir):
-    expdir = Path("tests/expected")
-    config_file = tmpdir.join("config.toml")
-    config_file.write(
-        f"""
-        data_direc = "tests/input"
-        save_figs = true
-        save_direc = "{tmpdir}"
-        land = "tests/input/reproj_land.tiff"
-        [erosion]
-        itmax = 8
-        itmin = 3
-        step = -1
-        kernel_type = "diamond"
-        kernel_size = 1
-        """
-    )
 
     result = subprocess.run(
         [
             "fsdproc",
-            "--config-file",
-            str(config_file),
-            "--max-workers",
-            "1",
+            "tests/input",
+            "tests/input/reproj_land.tiff",
+            tmpdir, 
+            "--save-figs",
+            "--itmax", "8",
+            "--itmin", "3",
+            "--step", "-1",
+            "--kernel-type", "diamond",
+            "--kernel-size", "1",
+            "--max-workers", "1",
         ],
         capture_output=True,
         text=True,
