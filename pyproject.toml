@@ -75,6 +75,9 @@ source = "vcs"
 [tool.hatch.build.targets.wheel]
 sources = ["src"]
 
+[tool.hatch.envs.default]
+installer = "uv"
+
 [tool.hatch.envs.types]
 extra-dependencies = [
   "mypy>=1.0.0",
