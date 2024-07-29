@@ -15,6 +15,7 @@
         """
 
     [[load_files]]
+        # TODO: Replace with some clever API calls
         script = """
             ln -s $CYLC_WORKFLOW_RUN_DIR/tests/input/. $CYLC_WORKFLOW_SHARE_DIR/input
         """
