@@ -18,5 +18,13 @@
 		"ghcr.io/devcontainers-contrib/features/hatch:2": {}
 	},
 
-	"postCreateCommand": "hatch env create"
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	},
+
+	"postCreateCommand": "hatch env create",
 }

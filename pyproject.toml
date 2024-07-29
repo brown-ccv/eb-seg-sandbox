@@ -63,15 +63,25 @@ test = [
 [project.scripts]
 fsdproc = "ebfloeseg.app:app"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch]
+
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/ebfloeseg tests}"
+
 
 [tool.pytest.ini_options]
 markers = [
@@ -80,6 +90,16 @@ markers = [
 ]
 
 [tool.coverage.run]
+source_pkgs = ["ebfloeseg", "tests"]
+branch = true
+parallel = true
 omit = [
   "src/ebfloeseg/process.py", # tested in test_app.py
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
 ]
