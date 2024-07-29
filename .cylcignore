@@ -1,0 +1,6 @@
+src/ebfloeseg.egg-info/
+.venv
+temp/
+README.md
+sample-workflow.ipynb
+.github
