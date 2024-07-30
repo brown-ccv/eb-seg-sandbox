@@ -26,5 +26,5 @@
 		}
 	},
 
-	"postCreateCommand": "python -m venv .venv; . .venv/bin/activate; pip install --editable '.[dev]'"
+	"postCreateCommand": "python -m venv .venv; . .venv/bin/activate; pip install --upgrade pip; pip install --editable '.[dev]'"
 }
