@@ -3,7 +3,6 @@
 [scheduling]
     [[graph]]
         R1 = """
-            load_files => preprocess
             setup_environment => preprocess
         """
 [runtime]
@@ -12,12 +11,6 @@
             python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
             source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
-        """
-
-    [[load_files]]
-        # TODO: Replace with some clever API calls
-        script = """
-            ln -s $CYLC_WORKFLOW_RUN_DIR/tests/input/. $CYLC_WORKFLOW_SHARE_DIR/input
         """
 
     [[preprocess]]
