@@ -155,3 +155,8 @@ markers = [
 omit = [
   "src/ebfloeseg/process.py", # tested in test_app.py
 ]
+
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
