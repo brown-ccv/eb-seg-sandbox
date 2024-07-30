@@ -73,6 +73,7 @@ def parse_config_file(config_file: Path) -> ConfigParams:
 
     return ConfigParams(**defaults)
 
+
 class KernelType(str, Enum):
     diamond = "diamond"
     ellipse = "ellipse"
@@ -80,19 +81,31 @@ class KernelType(str, Enum):
 
 @app.command(name="process-images", help=help, epilog=epilog)
 def process_images(
-    
     in_dir: Annotated[Path, typer.Argument(help="directory containing input files")],
     mask: Annotated[Path, typer.Argument(help="path to land mask file")],
     out_dir: Annotated[Path, typer.Argument(help="directory for outputs")],
-    save_figs: Annotated[bool, typer.Option(..., "--save-figs", help="save figures")] = False,
-    itmax: Annotated[int, typer.Option(..., "--itmax", help="maximum number of iterations for erosion")] = 8,
-    itmin: Annotated[int, typer.Option(..., "--itmin", help="minimum number of iterations for erosion")] = 3,
+    save_figs: Annotated[
+        bool, typer.Option(..., "--save-figs", help="save figures")
+    ] = False,
+    itmax: Annotated[
+        int,
+        typer.Option(..., "--itmax", help="maximum number of iterations for erosion"),
+    ] = 8,
+    itmin: Annotated[
+        int,
+        typer.Option(..., "--itmin", help="minimum number of iterations for erosion"),
+    ] = 3,
     step: Annotated[int, typer.Option(..., "--step")] = -1,
-    kernel_type: Annotated[KernelType, typer.Option(..., "--kernel-type")] = KernelType.diamond,
+    kernel_type: Annotated[
+        KernelType, typer.Option(..., "--kernel-type")
+    ] = KernelType.diamond,
     kernel_size: Annotated[int, typer.Option(..., "--kernel-size")] = 1,
-    max_workers: Annotated[Optional[int], typer.Option(
-        help="The maximum number of workers. If None, uses all available processors.",
-    )] = 1,
+    max_workers: Annotated[
+        Optional[int],
+        typer.Option(
+            help="The maximum number of workers. If None, uses all available processors.",
+        ),
+    ] = 1,
 ):
     # create output directory
     out_dir.mkdir(exist_ok=True, parents=True)
