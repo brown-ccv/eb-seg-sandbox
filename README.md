@@ -35,5 +35,10 @@ Besides the standard package, extra tooling (e.g., testing, formatting, linting,
 pip install -e ".[dev]"
 ```
 
+You can also use the included devcontainer, which preinstalls dependencies including:
+- GDAL (for `rasterio`) and 
+- `libgtk-3-dev` (for `cv2`)
+Use the "Reopen in container" command in VSCode or as a GitHub codespace.
+
 ## CLI
 Upon installation the `fsdproc` command will be available. View its help with `fsdproc --help`.
