@@ -90,7 +90,7 @@ dependencies = [ # Optional
 [project.optional-dependencies] # Optional
 dev = [
   "check-manifest",
-  "black",
+  "black[jupyter]",
   "ipython",
   "ptpython",
   "ipykernel",
