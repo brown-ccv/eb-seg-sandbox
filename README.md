@@ -42,3 +42,17 @@ Use the "Reopen in container" command in VSCode or as a GitHub codespace.
 
 ## CLI
 Upon installation the `fsdproc` command will be available. View its help with `fsdproc --help`.
+
+## Cylc
+To run the `cylc` workflow with the test data, run:
+```bash
+cylc stop ebseg/*       # stops any currently running workflows
+cylc install . -n ebseg # installs the current version of the workflow
+cylc play ebseg         # runs the workflow
+cylc tui ebseg          # opens the text user interface
+```
+
+or on one line:
+```bash
+cylc stop ebseg/* ; cylc install . && cylc play ebseg && cylc tui ebseg
+```
