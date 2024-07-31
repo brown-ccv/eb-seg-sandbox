@@ -32,7 +32,9 @@ def main(
         case ImageType.truecolor:
             layers = "MODIS_Terra_CorrectedReflectance_TrueColor"
         case ImageType.cloud:
-            layers = "MODIS_Terra_CorrectedReflectance_TrueColor,MODIS_Terra_Cloud_Fraction_Day"
+            layers = "MODIS_Terra_Cloud_Fraction_Day"
+
+    
 
     url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot?REQUEST=GetSnapshot&TIME={datetime}&BBOX={bbox}&CRS={crs}&LAYERS={layers}&WRAP={wrap}&FORMAT={format}&WIDTH={width}&HEIGHT={height}&ts={ts}"
 
