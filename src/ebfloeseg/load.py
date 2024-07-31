@@ -21,10 +21,10 @@ def main(
     wrap: str = "day",
     kind: ImageType = ImageType.truecolor,
     bbox: str = "-2334051.0214676396,-414387.78951688844,-1127689.8419350237,757861.8364224486",
-    crs: str = "EPSG:3413",
-    ts: int = 1683675557694,
     width: int = 4712,
     height: int = 4579,
+    crs: str = "EPSG:3413",
+    ts: int = 1683675557694,
     format: str = "image/tiff",
 ):
 
