@@ -73,9 +73,20 @@ def main(
     width, height = get_width_height(bbox, scale)
     _logger.info("Width: %s Height: %s" % (width, height))
 
-    url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot?REQUEST=GetSnapshot&TIME={datetime}&BBOX={bbox}&CRS={crs}&LAYERS={layers}&WRAP={wrap}&FORMAT={format}&WIDTH={width}&HEIGHT={height}&ts={ts}"
-    
-    r = requests.get(url, allow_redirects=True)
+    url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot"
+    payload = {
+        "REQUEST": "GetSnapshot",
+        "TIME": datetime,
+        "BBOX": bbox,
+        "CRS": crs,
+        "LAYERS": layers,
+        "WRAP": wrap,
+        "FORMAT": format,
+        "WIDTH": width,
+        "HEIGHT": height,
+        "ts": ts
+    }
+    r = requests.get(url, params=payload, allow_redirects=True)
     r.raise_for_status()
 
 
