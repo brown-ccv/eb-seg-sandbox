@@ -8,14 +8,16 @@ import typer
 
 _logger = logging.getLogger(__name__)
 
+
 class ImageType(str, Enum):
     truecolor = "truecolor"
     cloud = "cloud"
     landmask = "landmask"
 
+
 def get_width_height(bbox: str, scale: float):
     """Get width and height for a bounding box where one pixel corresponds to `scale` bounding box units
-    
+
     Examples:
         >>> get_width_height("0,0,1,1", 10)
         (10, 10)
@@ -34,6 +36,7 @@ def get_width_height(bbox: str, scale: float):
     width, height = int(x_length / scale), int(y_length / scale)
     return width, height
 
+
 app = typer.Typer()
 
 
@@ -44,13 +47,15 @@ def main(
     wrap: str = "day",
     kind: ImageType = ImageType.truecolor,
     bbox: str = "-2334051.0214676396,-414387.78951688844,-1127689.8419350237,757861.8364224486",
-    scale: Annotated[int, typer.Option(help="size of a pixel in units of the bounding box")] = 250,
+    scale: Annotated[
+        int, typer.Option(help="size of a pixel in units of the bounding box")
+    ] = 250,
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
     format: str = "image/tiff",
-    quiet: Annotated[bool, typer.Option()]=False,
-    verbose: Annotated[bool, typer.Option()]=False,
-    debug: Annotated[bool, typer.Option()]=False,
+    quiet: Annotated[bool, typer.Option()] = False,
+    verbose: Annotated[bool, typer.Option()] = False,
+    debug: Annotated[bool, typer.Option()] = False,
 ):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -69,7 +74,6 @@ def main(
         case ImageType.landmask:
             layers = "OSM_Land_Mask"
 
-
     width, height = get_width_height(bbox, scale)
     _logger.info("Width: %s Height: %s" % (width, height))
 
@@ -84,11 +88,10 @@ def main(
         "FORMAT": format,
         "WIDTH": width,
         "HEIGHT": height,
-        "ts": ts
+        "ts": ts,
     }
     r = requests.get(url, params=payload, allow_redirects=True)
     r.raise_for_status()
-
 
     with open(outfile, "wb") as f:
         f.write(r.content)
