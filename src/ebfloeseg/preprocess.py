@@ -8,6 +8,7 @@ import skimage
 from skimage.filters import threshold_local
 from skimage.morphology import diamond, opening
 import rasterio
+from rasterio.enums import ColorInterp
 
 from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
@@ -71,7 +72,18 @@ def _preprocess(
 
     cloud_mask = create_cloud_mask(fcloud)
 
-    red_c, green_c, blue_c = tci.read()  # these are different than the layers in rgb
+
+    match tci.colorinterp:
+        case (ColorInterp.red, ColorInterp.green, ColorInterp.blue):
+            red_c, green_c, blue_c = tci.read()
+            assert tci.colorinterp[0] is ColorInterp.red
+        case (ColorInterp.red, ColorInterp.green, ColorInterp.blue, _):
+            red_c, green_c, blue_c, _ = tci.read()
+        case _:
+            msg = "unknown number of dimensions %s" % tci.colorinterp
+            raise ValueError(msg)
+
+
     rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
 
     maskrgb(rgb_masked, cloud_mask)
