@@ -90,7 +90,6 @@ def main(
     r.raise_for_status()
 
 
-    outfile.parent.mkdir(parents=True, exist_ok=True)
     with open(outfile, "wb") as f:
         f.write(r.content)
 
