@@ -9,6 +9,7 @@ import typer
 class ImageType(str, Enum):
     truecolor = "truecolor"
     cloud = "cloud"
+    landmask = "landmask"
 
 
 app = typer.Typer()
@@ -33,6 +34,8 @@ def main(
             layers = "MODIS_Terra_CorrectedReflectance_TrueColor"
         case ImageType.cloud:
             layers = "MODIS_Terra_Cloud_Fraction_Day"
+        case ImageType.landmask:
+            layers = "OSM_Land_Mask"
 
     
 
