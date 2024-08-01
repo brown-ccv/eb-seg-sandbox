@@ -18,9 +18,9 @@
         script = """
             mkdir $CYLC_WORKFLOW_SHARE_DIR/data
             . $CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/tci.tiff --debug --kind truecolor
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/cld.tiff --debug --kind cloud 
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/lnd.tiff --debug --kind landmask
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/tci.tiff --kind truecolor
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/cld.tiff --kind cloud 
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/lnd.tiff --kind landmask
         """
 
     [[preprocess]]
