@@ -85,8 +85,7 @@ dependencies = [ # Optional
   "scipy >=1.13, <2.0.0",
   "opencv-python >=4.9, <5.0.0",
   "typer >=0.12.3, <1.0.0",
-  "requests",
-  "netcdf4",
+  "requests"
 ]
 
 [project.optional-dependencies] # Optional
