@@ -1,10 +1,12 @@
 from enum import Enum
+import logging
 from pathlib import Path
 from typing import Annotated
 import requests
 
 import typer
 
+_logger = logging.basicConfig()
 
 class ImageType(str, Enum):
     truecolor = "truecolor"
@@ -58,11 +60,14 @@ def main(
 
 
     width, height = get_width_height(bbox, scale)
-    print(width, height)
 
     url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot?REQUEST=GetSnapshot&TIME={datetime}&BBOX={bbox}&CRS={crs}&LAYERS={layers}&WRAP={wrap}&FORMAT={format}&WIDTH={width}&HEIGHT={height}&ts={ts}"
+    _logger.info("loading from %s" % url)
+
 
     r = requests.get(url, allow_redirects=True)
+    r.raise_for_status()
+    
     outfile.parent.mkdir(parents=True, exist_ok=True)
     with open(outfile, "wb") as f:
         f.write(r.content)
