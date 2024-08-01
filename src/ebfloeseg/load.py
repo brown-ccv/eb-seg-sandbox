@@ -6,7 +6,7 @@ import requests
 
 import typer
 
-_logger = logging.basicConfig()
+_logger = logging.getLogger(__name__)
 
 class ImageType(str, Enum):
     truecolor = "truecolor"
@@ -48,7 +48,18 @@ def main(
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
     format: str = "image/tiff",
+    quiet: Annotated[bool, typer.Option()]=False,
+    verbose: Annotated[bool, typer.Option()]=False,
+    debug: Annotated[bool, typer.Option()]=False,
 ):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    elif verbose:
+        logging.basicConfig(level=logging.INFO)
+    elif quiet:
+        logging.basicConfig(level=logging.ERROR)
+    else:
+        logging.basicConfig(level=logging.WARNING)
 
     match kind:
         case ImageType.truecolor:
@@ -60,14 +71,14 @@ def main(
 
 
     width, height = get_width_height(bbox, scale)
+    _logger.info("Width: %s Height: %s" % (width, height))
 
     url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot?REQUEST=GetSnapshot&TIME={datetime}&BBOX={bbox}&CRS={crs}&LAYERS={layers}&WRAP={wrap}&FORMAT={format}&WIDTH={width}&HEIGHT={height}&ts={ts}"
-    _logger.info("loading from %s" % url)
-
-
+    
     r = requests.get(url, allow_redirects=True)
     r.raise_for_status()
-    
+
+
     outfile.parent.mkdir(parents=True, exist_ok=True)
     with open(outfile, "wb") as f:
         f.write(r.content)
