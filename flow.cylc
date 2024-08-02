@@ -12,9 +12,9 @@
 
 [runtime]
     [[root]]
-        script = """
+        [[[environment]]]
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
-        """
+        
 
     [[setup]]
         script = """
