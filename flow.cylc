@@ -11,32 +11,43 @@
     date = "2016-06-01", "2016-07-01"
 
 [runtime]
+    [[root]]
+        script = """
+            VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
+        """
+
     [[setup]]
         script = """
-            python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
-            source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
+            python3.11 -m venv "$VENV"
+            . "${VENV}/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
         """
 
-    [[load<date>]]
+    [[environment<date>]]
         script = """
-            OUTDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/
-            mkdir -p "$OUTDIR"
-            . $CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate
+            DATE=${CYLC_TASK_PARAM_date}
+            DOY=$(date -d "$DATE" +%j)
+            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/
+            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/output/
+            mkdir -p "$IMGDIR"
+            mkdir -p "$PREPROCESSDIR"
+            . "${VENV}/bin/activate"
+        """
 
-            python -m ebfloeseg.load "$OUTDIR/tci.tiff" --kind truecolor --datetime ${CYLC_TASK_PARAM_date}
-            python -m ebfloeseg.load "$OUTDIR/cld.tiff" --kind cloud --datetime ${CYLC_TASK_PARAM_date}
-            python -m ebfloeseg.load "$OUTDIR/lnd.tiff" --kind landmask --datetime ${CYLC_TASK_PARAM_date}
+    [[load<date>]]
+        inherit = environment<date>
+        script = """
+            python -m ebfloeseg.load $IMGDIR/tci.tiff --kind truecolor --datetime ${CYLC_TASK_PARAM_date}
+            python -m ebfloeseg.load $IMGDIR/cld.tiff --kind cloud --datetime ${CYLC_TASK_PARAM_date}
+            python -m ebfloeseg.load $IMGDIR/lnd.tiff --kind landmask --datetime ${CYLC_TASK_PARAM_date}
         """
 
     [[preprocess<date>]]
+        inherit = environment<date>
         script = """
-        INDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/
-        OUTDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/output/
-        mkdir -p $OUTDIR
         python -m ebfloeseg.run \
-            "${INDIR}/tci.tiff" \
-            "${INDIR}/cld.tiff" \
-            "${INDIR}/lnd.tiff" \
-            "${OUTDIR}"
+            "${IMGDIR}/tci.tiff" \
+            "${IMGDIR}/cld.tiff" \
+            "${IMGDIR}/lnd.tiff" \
+            "${PREPROCESSDIR}"
         """
