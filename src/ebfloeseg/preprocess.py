@@ -63,11 +63,13 @@ def _preprocess(
     erosion_kernel_size,
     save_figs,
     save_direc,
+    doy="",
+    year="",
+    sat="",
+    res="",
 ):
     tci = rasterio.open(ftci)
-    doy, year, sat = getmeta(fcloud)
-    res = getres(doy, year)
-    save_direc = save_direc / doy
+    
     save_direc.mkdir(exist_ok=True, parents=True)
 
     cloud_mask = create_cloud_mask(fcloud)
@@ -247,17 +249,25 @@ def preprocess(
     save_direc,
 ):
     try:
+        doy, year, sat = getmeta(fcloud)
+        res = getres(doy, year)
+        save_direc = save_direc / doy
+
         _preprocess(
-            ftci,
-            fcloud,
-            land_mask,
-            itmax,
-            itmin,
-            step,
-            erosion_kernel_type,
-            erosion_kernel_size,
-            save_figs,
-            save_direc,
+            ftci=ftci,
+            fcloud=fcloud,
+            land_mask=land_mask,
+            itmax=itmax,
+            itmin=itmin,
+            step=step,
+            erosion_kernel_type=erosion_kernel_type,
+            erosion_kernel_size=erosion_kernel_size,
+            save_figs=save_figs,
+            save_direc=save_direc,
+            doy=doy,
+            year=year,
+            sat=sat,
+            res=res,
         )
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
