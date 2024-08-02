@@ -1,18 +1,21 @@
 [scheduler]
     allow implicit tasks = True
 
+[task parameters]
+    location = beaufort_sea, hudson_bay
+
 [scheduling]
     initial cycle point = 2016-06-01
-    final cycle point = 2016-06-30
+    final cycle point = 2016-06-01
     
     [[graph]]
         
         R1 = """
-        setup
+            setup
         """
         
         P1D = """
-            setup[^] => load => preprocess
+            setup[^] => load<location> => preprocess<location>
         """
 
 [runtime]
@@ -20,27 +23,34 @@
         [[[environment]]]
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
-            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
-            DOY=$(date -d "$DATE" +%j)
-            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/
-            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/output/
-
+    
     [[setup]]
         script = """
             python3.11 -m venv "$VENV"
             . "${VENV}/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
         """
+    
+    [[<location>]]
+        [[[environment]]]
+            LOCATION=${CYLC_TASK_PARAM_location}
+            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
+            DOY=$(date -d "$DATE" +%j)
+            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${LOCATION}/${DATE}/
+            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${LOCATION}/${DATE}/output
 
-    [[load]]
+    [[load<location>]]
+        inherit = <location>
         script = """
             mkdir -p "$IMGDIR"
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/tci.tiff --verbose --kind truecolor --datetime ${DATE}
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/cld.tiff --verbose --kind cloud --datetime ${DATE}
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/lnd.tiff --verbose --kind landmask --datetime ${DATE}
+            BBOX=$($PYTHON -c "import pandas; print(','.join(str(s) for s in list(pandas.read_csv('${CYLC_WORKFLOW_RUN_DIR}/locations.csv', index_col='location').loc['${LOCATION}'][['left_x', 'lower_y', 'right_x', 'top_y']])))")
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/tci.tiff --debug --kind truecolor --datetime ${DATE} --bbox $BBOX
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/cld.tiff --debug --kind cloud --datetime ${DATE} --bbox $BBOX
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/lnd.tiff --debug --kind landmask --datetime ${DATE} --bbox $BBOX
         """
 
-    [[preprocess]]
+    [[preprocess<location>]]
+        inherit = <location>
         script = """
         mkdir -p "$PREPROCESSDIR"
         ${PYTHON} -m ebfloeseg.run \
@@ -48,5 +58,5 @@
             "${IMGDIR}/cld.tiff" \
             "${IMGDIR}/lnd.tiff" \
             "${PREPROCESSDIR}" \
-            --verbose
+            --debug
         """
