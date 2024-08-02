@@ -67,6 +67,7 @@ def _preprocess(
     year="",
     sat="",
     res="",
+    fname_prefix="",
 ):
     tci = rasterio.open(ftci)
     
@@ -90,12 +91,12 @@ def _preprocess(
 
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        fname = "cloud_mask_on_rgb.tif"
+        fname = f"{fname_prefix}cloud_mask_on_rgb.tif"
         imsave(tci, rgb_masked, save_direc, doy, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
-        fname = "land_cloud_mask_on_rgb.tif"
+        fname = f"{fname_prefix}land_cloud_mask_on_rgb.tif"
         imsave(tci, rgb_masked, save_direc, doy, fname)
 
     ## adaptive threshold for ice mask
@@ -118,13 +119,14 @@ def _preprocess(
     )
 
     # saving ice mask
+    fname=f"{fname_prefix}ice_mask_bw.tif"
     if save_figs:
         imsave(
             tci=tci,
             img=ice_mask,
             save_direc=save_direc,
             doy=doy,
-            fname="ice_mask_bw.tif",
+            fname=fname,
             count=1,
             rollaxis=False,
             as_uint8=True,
@@ -199,7 +201,7 @@ def _preprocess(
         watershed[np.isin(watershed, df[df.area < area_lim].label.values)] = 1
 
         if save_figs:
-            fname = f"identification_round_{r}.tif"
+            fname = f"{fname_prefix}identification_round_{r}.tif"
             imsave(
                 tci=tci,
                 img=watershed,
@@ -222,7 +224,7 @@ def _preprocess(
     extract_features(output, red_c, save_direc, res, sat, doy)
 
     # saving the label floes tif
-    fname = f"{sat}_final.tif"
+    fname = f"{fname_prefix}{sat}_final.tif"
     imsave(
         tci=tci,
         img=output,
@@ -252,6 +254,7 @@ def preprocess(
         doy, year, sat = getmeta(fcloud)
         res = getres(doy, year)
         save_direc = save_direc / doy
+        fname_prefix=""
 
         _preprocess(
             ftci=ftci,
@@ -268,6 +271,7 @@ def preprocess(
             year=year,
             sat=sat,
             res=res,
+            fname_prefix=fname_prefix
         )
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
