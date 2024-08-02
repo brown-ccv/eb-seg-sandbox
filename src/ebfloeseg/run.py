@@ -30,7 +30,9 @@ def main(
     landmask: Annotated[Path, typer.Argument()],
     outdir: Annotated[Path, typer.Argument()],
     save_figs: Annotated[bool, typer.Option()] = True,
-    out_prefix: Annotated[str, typer.Option(help="string to prepend to filenames")] = "",
+    out_prefix: Annotated[
+        str, typer.Option(help="string to prepend to filenames")
+    ] = "",
     itmax: Annotated[
         int,
         typer.Option(..., "--itmax", help="maximum number of iterations for erosion"),

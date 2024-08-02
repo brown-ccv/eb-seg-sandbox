@@ -43,15 +43,15 @@ def imsave(
 
 
 def save_ice_mask_hist(
-    red_masked, 
-    bins, 
-    mincut, 
-    maxcut, 
-    target_dir, 
+    red_masked,
+    bins,
+    mincut,
+    maxcut,
+    target_dir,
     fname: Union[str, Path],
-    color="r", 
-    figsize=(6, 2)
-    ):
+    color="r",
+    figsize=(6, 2),
+):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     plt.hist(red_masked.flatten(), bins=bins, color=color)
     plt.axvline(mincut)

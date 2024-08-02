@@ -24,11 +24,14 @@ from ebfloeseg.utils import (
 
 
 def extract_features(
-    output, red_c, target_dir, fname,
-): 
+    output,
+    red_c,
+    target_dir,
+    fname,
+):
     props = get_region_properties(output, red_c)
     df = pd.DataFrame.from_dict(props)
-    df.to_csv(target_dir/fname)
+    df.to_csv(target_dir / fname)
 
 
 def get_remove_small_mask(watershed, it):
@@ -70,11 +73,10 @@ def _preprocess(
     fname_prefix="",
 ):
     tci = rasterio.open(ftci)
-    
+
     save_direc.mkdir(exist_ok=True, parents=True)
 
     cloud_mask = create_cloud_mask(fcloud)
-
 
     match tci.colorinterp:
         case (ColorInterp.red, ColorInterp.green, ColorInterp.blue):
@@ -85,7 +87,6 @@ def _preprocess(
         case _:
             msg = "unknown number of dimensions %s" % tci.colorinterp
             raise ValueError(msg)
-
 
     rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
 
@@ -108,13 +109,13 @@ def _preprocess(
 
     if save_figs:
         save_ice_mask_hist(
-            red_masked=red_masked, 
-            bins=bins, 
-            mincut=ow_cut_min, 
-            maxcut=ow_cut_max, 
+            red_masked=red_masked,
+            bins=bins,
+            mincut=ow_cut_min,
+            maxcut=ow_cut_max,
             target_dir=save_direc,
             fname=f"{fname_prefix}ice_mask_hist.png",
-            )
+        )
 
     thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
@@ -122,15 +123,15 @@ def _preprocess(
 
     # a simple text file with columns: 'doy','ice_area','unmasked','sic'
     write_mask_values(
-        lmd=land_mask + cloud_mask, 
-        ice_mask=ice_mask, 
-        doy=doy, 
-        save_direc=save_direc, 
-        fname=f"{fname_prefix}mask_values.txt"
+        lmd=land_mask + cloud_mask,
+        ice_mask=ice_mask,
+        doy=doy,
+        save_direc=save_direc,
+        fname=f"{fname_prefix}mask_values.txt",
     )
 
     # saving ice mask
-    fname=f"{fname_prefix}ice_mask_bw.tif"
+    fname = f"{fname_prefix}ice_mask_bw.tif"
     if save_figs:
         imsave(
             tci=tci,
@@ -220,7 +221,7 @@ def _preprocess(
                 count=1,
                 rollaxis=False,
                 as_uint8=True,
-                res=res,    
+                res=res,
             )
 
         input_no = ice_mask + inp
@@ -235,8 +236,10 @@ def _preprocess(
         fname_infix = f"{sat}_{fname_infix}"
     if res:
         fname_infix = f"{res}_{fname_infix}"
-    
-    extract_features(output, red_c, save_direc, fname = f"{fname_prefix}{fname_infix}props.csv")
+
+    extract_features(
+        output, red_c, save_direc, fname=f"{fname_prefix}{fname_infix}props.csv"
+    )
 
     # saving the label floes tif
     fname = "final.tif"
@@ -272,7 +275,7 @@ def preprocess(
         doy, year, sat = getmeta(fcloud)
         res = getres(doy, year)
         save_direc = save_direc / doy
-        fname_prefix=""
+        fname_prefix = ""
 
         _preprocess(
             ftci=ftci,
@@ -289,11 +292,12 @@ def preprocess(
             year=year,
             sat=sat,
             res=res,
-            fname_prefix=fname_prefix
+            fname_prefix=fname_prefix,
         )
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
         raise
+
 
 def preprocess_b(
     ftci,
@@ -336,4 +340,3 @@ def preprocess_b(
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
         raise
-
