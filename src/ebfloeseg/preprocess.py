@@ -92,12 +92,12 @@ def _preprocess(
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
         fname = f"{fname_prefix}cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, save_direc, doy, fname)
+        imsave(tci, rgb_masked, save_direc, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
         fname = f"{fname_prefix}land_cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, save_direc, doy, fname)
+        imsave(tci, rgb_masked, save_direc, fname)
 
     ## adaptive threshold for ice mask
     red_masked = rgb_masked[:, :, 0]
@@ -107,7 +107,14 @@ def _preprocess(
     ow_cut_min, ow_cut_max, bins = get_wcuts(red_masked)
 
     if save_figs:
-        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, save_direc)
+        save_ice_mask_hist(
+            red_masked=red_masked, 
+            bins=bins, 
+            mincut=ow_cut_min, 
+            maxcut=ow_cut_max, 
+            target_dir=save_direc,
+            fname=f"{fname_prefix}ice_mask_hist.png",
+            )
 
     thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
@@ -125,7 +132,6 @@ def _preprocess(
             tci=tci,
             img=ice_mask,
             save_direc=save_direc,
-            doy=doy,
             fname=fname,
             count=1,
             rollaxis=False,
@@ -206,7 +212,6 @@ def _preprocess(
                 tci=tci,
                 img=watershed,
                 save_direc=save_direc,
-                doy=doy,
                 fname=fname,
                 count=1,
                 rollaxis=False,
@@ -229,7 +234,6 @@ def _preprocess(
         tci=tci,
         img=output,
         save_direc=save_direc,
-        doy=doy,
         fname=fname,
         count=1,
         rollaxis=False,
