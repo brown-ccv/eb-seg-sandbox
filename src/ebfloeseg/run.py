@@ -1,7 +1,7 @@
 from enum import Enum
 import logging
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 import requests
 
 import typer
@@ -11,6 +11,8 @@ from ebfloeseg.masking import create_land_mask
 from ebfloeseg.preprocess import preprocess_b
 
 _logger = logging.getLogger(__name__)
+
+from datetime import datetime
 
 
 class KernelType(str, Enum):
@@ -42,6 +44,7 @@ def main(
         KernelType, typer.Option(..., "--kernel-type")
     ] = KernelType.diamond,
     kernel_size: Annotated[int, typer.Option(..., "--kernel-size")] = 1,
+    date: Annotated[Optional[datetime], typer.Option()] = None,
     quiet: Annotated[bool, typer.Option()] = False,
     verbose: Annotated[bool, typer.Option()] = False,
     debug: Annotated[bool, typer.Option()] = False,
@@ -62,6 +65,7 @@ def main(
         save_figs=save_figs,
         save_direc=outdir,
         fname_prefix=out_prefix,
+        date=date,
     )
 
     return

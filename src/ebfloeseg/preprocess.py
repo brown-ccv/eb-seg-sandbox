@@ -1,4 +1,6 @@
+import datetime
 from logging import getLogger
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -305,8 +307,15 @@ def preprocess_b(
     save_figs,
     save_direc,
     fname_prefix,
+    date: Optional[datetime.datetime],
 ):
     try:
+        if date is not None:
+            doy = date.timetuple().tm_yday
+            year = date.year
+        else:
+            doy = None
+            year = None
         _preprocess(
             ftci=ftci,
             fcloud=fcloud,
@@ -318,8 +327,8 @@ def preprocess_b(
             erosion_kernel_size=erosion_kernel_size,
             save_figs=save_figs,
             save_direc=save_direc,
-            doy=None,
-            year=None,
+            doy=doy,
+            year=year,
             sat=None,
             res=None,
             fname_prefix=fname_prefix,
