@@ -3,7 +3,8 @@
 [scheduling]
     [[graph]]
         R1 = """
-            setup_environment => preprocess
+            setup_environment => load_data
+            load_data => preprocess
         """
 [runtime]
     [[setup_environment]]
@@ -11,6 +12,15 @@
             python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
             source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
+        """
+
+    [[load_data]]
+        script = """
+            mkdir $CYLC_WORKFLOW_SHARE_DIR/data
+            . $CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/tci.tiff --kind truecolor
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/cld.tiff --kind cloud 
+            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/lnd.tiff --kind landmask
         """
 
     [[preprocess]]
