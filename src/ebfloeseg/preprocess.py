@@ -120,11 +120,11 @@ def _preprocess(
     # saving ice mask
     if save_figs:
         imsave(
-            tci,
-            ice_mask,
-            save_direc,
-            doy,
-            "ice_mask_bw.tif",
+            tci=tci,
+            img=ice_mask,
+            save_direc=save_direc,
+            doy=doy,
+            fname="ice_mask_bw.tif",
             count=1,
             rollaxis=False,
             as_uint8=True,
@@ -201,15 +201,15 @@ def _preprocess(
         if save_figs:
             fname = f"identification_round_{r}.tif"
             imsave(
-                tci,
-                watershed,
-                save_direc,
-                doy,
-                fname,
+                tci=tci,
+                img=watershed,
+                save_direc=save_direc,
+                doy=doy,
+                fname=fname,
                 count=1,
                 rollaxis=False,
                 as_uint8=True,
-                res=res,
+                res=res,    
             )
 
         input_no = ice_mask + inp
@@ -224,11 +224,11 @@ def _preprocess(
     # saving the label floes tif
     fname = f"{sat}_final.tif"
     imsave(
-        tci,
-        output,
-        save_direc,
-        doy,
-        fname,
+        tci=tci,
+        img=output,
+        save_direc=save_direc,
+        doy=doy,
+        fname=fname,
         count=1,
         rollaxis=False,
         as_uint8=True,
