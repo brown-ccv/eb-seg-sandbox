@@ -41,18 +41,15 @@ def test_getres():
 
 
 def test_write_mask_values(tmpdir):
-    land_mask = np.ones((3, 3))
     lmd = np.ones((3, 3))
     ice_mask = np.ones((3, 3))
     doy = "214"
-    year = "2012"
     write_mask_values(
-        land_mask.astype(int),
-        lmd.astype(int),
-        ice_mask.astype(int),
-        doy,
-        year,
-        tmpdir,
+        lmd=lmd.astype(int),
+        ice_mask=ice_mask.astype(int),
+        doy=doy,
+        save_direc=tmpdir,
+        fname="mask_values.txt",
     )
 
     with open(tmpdir / "mask_values.txt", "r") as f:

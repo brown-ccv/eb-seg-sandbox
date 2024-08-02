@@ -120,7 +120,11 @@ def _preprocess(
 
     # a simple text file with columns: 'doy','ice_area','unmasked','sic'
     write_mask_values(
-        land_mask, land_mask + cloud_mask, ice_mask, doy, year, save_direc
+        lmd=land_mask + cloud_mask, 
+        ice_mask=ice_mask, 
+        doy=doy, 
+        save_direc=save_direc, 
+        fname=f"{fname_prefix}mask_values.txt"
     )
 
     # saving ice mask
@@ -233,7 +237,11 @@ def _preprocess(
     extract_features(output, red_c, save_direc, fname = f"{fname_prefix}{fname_infix}props.csv")
 
     # saving the label floes tif
-    fname = f"{fname_prefix}{sat}_final.tif"
+    fname = "final.tif"
+    if sat:
+        fname = f"{sat}_{fname}"
+    if fname_prefix:
+        fname = f"{fname_prefix}{fname}"
     imsave(
         tci=tci,
         img=output,
