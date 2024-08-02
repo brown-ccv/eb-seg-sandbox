@@ -3,28 +3,40 @@
 [scheduling]
     [[graph]]
         R1 = """
-            setup_environment => load_data
-            load_data => preprocess
+            setup => load<date>
+            load<date> => preprocess<date>
         """
+
+[task parameters]
+    date = "2016-06-01", "2016-07-01"
+
 [runtime]
-    [[setup_environment]]
+    [[setup]]
         script = """
             python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
             source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
         """
 
-    [[load_data]]
+    [[load<date>]]
         script = """
-            mkdir $CYLC_WORKFLOW_SHARE_DIR/data
+            OUTDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/
+            mkdir -p "$OUTDIR"
             . $CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/tci.tiff --kind truecolor
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/cld.tiff --kind cloud 
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/lnd.tiff --kind landmask
+
+            python -m ebfloeseg.load "$OUTDIR/tci.tiff" --kind truecolor --datetime ${CYLC_TASK_PARAM_date}
+            python -m ebfloeseg.load "$OUTDIR/cld.tiff" --kind cloud --datetime ${CYLC_TASK_PARAM_date}
+            python -m ebfloeseg.load "$OUTDIR/lnd.tiff" --kind landmask --datetime ${CYLC_TASK_PARAM_date}
         """
 
-    [[preprocess]]
+    [[preprocess<date>]]
         script = """
-        cd $CYLC_WORKFLOW_RUN_DIR
-        $CYLC_WORKFLOW_SHARE_DIR/venv/bin/fsdproc -c configjob.toml
+        INDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/
+        OUTDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${CYLC_TASK_PARAM_date}/output/
+        mkdir -p $OUTDIR
+        python -m ebfloeseg.run \
+            "${INDIR}/tci.tiff" \
+            "${INDIR}/cld.tiff" \
+            "${INDIR}/lnd.tiff" \
+            "${OUTDIR}"
         """
