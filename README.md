@@ -56,3 +56,8 @@ or on one line:
 ```bash
 cylc stop ebseg/* ; cylc install . && cylc play ebseg && cylc tui ebseg
 ```
+
+In some cases, if the installation fails, you might need to run `cylc clean` before reinstalling: 
+```bash
+cylc stop ebseg/*; cylc clean ebseg/*; cylc install . && cylc play ebseg && cylc tui ebseg
+```
