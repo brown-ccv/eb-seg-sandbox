@@ -8,7 +8,7 @@ import typer
 
 from ebfloeseg.load import logger_config
 from ebfloeseg.masking import create_land_mask
-from ebfloeseg.preprocess import preprocess
+from ebfloeseg.preprocess import preprocess_b
 
 _logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ def main(
     landmask: Annotated[Path, typer.Argument()],
     outdir: Annotated[Path, typer.Argument()],
     save_figs: Annotated[bool, typer.Option()] = True,
+    out_prefix: Annotated[str, typer.Option(help="string to prepend to filenames")] = "",
     itmax: Annotated[
         int,
         typer.Option(..., "--itmax", help="maximum number of iterations for erosion"),
@@ -48,11 +49,11 @@ def main(
 
     logger_config(debug, verbose, quiet)
 
-    preprocess(
+    preprocess_b(
         ftci=truecolorimg,
         fcloud=cloudimg,
         # TODO: push this file load into the preprocess step, or load all the images outside
-        land_mask=create_land_mask(landmask),
+        fland=landmask,
         itmax=itmax,
         itmin=itmin,
         step=step,
@@ -60,6 +61,7 @@ def main(
         erosion_kernel_size=kernel_size,
         save_figs=save_figs,
         save_direc=outdir,
+        fname_prefix=out_prefix,
     )
 
     return

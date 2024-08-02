@@ -10,7 +10,7 @@ from skimage.morphology import diamond, opening
 import rasterio
 from rasterio.enums import ColorInterp
 
-from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
+from ebfloeseg.masking import create_land_mask, maskrgb, mask_image, create_cloud_mask
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
 from ebfloeseg.utils import (
     write_mask_values,
@@ -280,3 +280,39 @@ def preprocess(
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
         raise
+
+def preprocess_b(
+    ftci,
+    fcloud,
+    fland,
+    itmax,
+    itmin,
+    step,
+    erosion_kernel_type,
+    erosion_kernel_size,
+    save_figs,
+    save_direc,
+    fname_prefix,
+):
+    try:
+        _preprocess(
+            ftci=ftci,
+            fcloud=fcloud,
+            land_mask=create_land_mask(fland),
+            itmax=itmax,
+            itmin=itmin,
+            step=step,
+            erosion_kernel_type=erosion_kernel_type,
+            erosion_kernel_size=erosion_kernel_size,
+            save_figs=save_figs,
+            save_direc=save_direc,
+            doy=None,
+            year=None,
+            sat=None,
+            res=None,
+            fname_prefix=fname_prefix,
+        )
+    except Exception as e:
+        logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
+        raise
+
