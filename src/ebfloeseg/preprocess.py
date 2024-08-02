@@ -22,13 +22,11 @@ from ebfloeseg.utils import (
 
 
 def extract_features(
-    output, red_c, target_dir, res, sat, doy
-):  # adding doy temporarily for testing. TODO: use doy for subdir
-    # fname = target_dir / f"{res}_{sat}_props.csv"
-    fname = target_dir / f"{res}_{sat}_props.csv"
+    output, red_c, target_dir, fname,
+): 
     props = get_region_properties(output, red_c)
     df = pd.DataFrame.from_dict(props)
-    df.to_csv(fname)
+    df.to_csv(target_dir/fname)
 
 
 def get_remove_small_mask(watershed, it):
@@ -226,7 +224,13 @@ def _preprocess(
 
     # saving the props table
     output = opening(output)
-    extract_features(output, red_c, save_direc, res, sat, doy)
+    fname_infix = ""
+    if sat:
+        fname_infix = f"{sat}_{fname_infix}"
+    if res:
+        fname_infix = f"{res}_{fname_infix}"
+    
+    extract_features(output, red_c, save_direc, fname = f"{fname_prefix}{fname_infix}props.csv")
 
     # saving the label floes tif
     fname = f"{fname_prefix}{sat}_final.tif"
