@@ -57,7 +57,6 @@ def main(
     preprocess_b(
         ftci=truecolorimg,
         fcloud=cloudimg,
-        # TODO: push this file load into the preprocess step, or load all the images outside
         fland=landmask,
         itmax=itmax,
         itmin=itmin,
