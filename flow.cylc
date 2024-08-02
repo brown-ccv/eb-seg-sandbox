@@ -1,0 +1,20 @@
+[scheduler]
+    allow implicit tasks = True
+[scheduling]
+    [[graph]]
+        R1 = """
+            setup_environment => preprocess
+        """
+[runtime]
+    [[setup_environment]]
+        script = """
+            python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
+            source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
+            pip install "$CYLC_WORKFLOW_RUN_DIR"
+        """
+
+    [[preprocess]]
+        script = """
+        cd $CYLC_WORKFLOW_RUN_DIR
+        $CYLC_WORKFLOW_SHARE_DIR/venv/bin/fsdproc -c configjob.toml
+        """

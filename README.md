@@ -35,5 +35,30 @@ Besides the standard package, extra tooling (e.g., testing, formatting, linting,
 pip install -e ".[dev]"
 ```
 
+You can also use the included devcontainer, which preinstalls dependencies including:
+- GDAL (for `rasterio`) and 
+- `libgtk-3-dev` (for `cv2`)
+Use the "Reopen in container" command in VSCode or as a GitHub codespace.
+
 ## CLI
 Upon installation the `fsdproc` command will be available. View its help with `fsdproc --help`.
+
+## Cylc
+To run the `cylc` workflow with the test data, run:
+```bash
+cylc stop ebseg/*       # stops any currently running workflows
+cylc validate .         # check the cylc configuration
+cylc install . -n ebseg # installs the current version of the workflow
+cylc play ebseg         # runs the workflow
+cylc tui ebseg          # opens the text user interface
+```
+
+or on one line:
+```bash
+cylc stop ebseg/* ; cylc validate . & cylc install . && cylc play ebseg && cylc tui ebseg
+```
+
+In some cases, if the installation fails, you might need to run `cylc clean` before reinstalling: 
+```bash
+cylc stop ebseg/*; cylc validate . & cylc clean ebseg/*; cylc install . && cylc play ebseg && cylc tui ebseg
+```

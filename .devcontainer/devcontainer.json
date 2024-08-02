@@ -1,0 +1,31 @@
+{
+	"name": "ebseg Ubuntu",
+	
+	"build": {
+        "dockerfile": "Dockerfile"
+    },
+	
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/python:1": {
+			"installTools": true,
+			"version": "3.11"
+		},
+		"ghcr.io/devcontainers-contrib/features/pipx-package:1": {
+			"includeDeps": true,
+			"package": "cylc-flow",
+			"interpreter": "python3.11"
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-azuretools.vscode-docker",
+				"github.vscode-github-actions"
+			]
+		}
+	},
+
+	"postCreateCommand": "python -m venv .venv; . .venv/bin/activate; pip install --upgrade pip; pip install --editable '.[dev]'"
+}
