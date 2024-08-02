@@ -1,20 +1,29 @@
 [scheduler]
     allow implicit tasks = True
-[scheduling]
-    [[graph]]
-        R1 = """
-            setup => load<date>
-            load<date> => preprocess<date>
-        """
 
-[task parameters]
-    date = "2016-06-01", "2016-07-01"
+[scheduling]
+    initial cycle point = 2016-06-01
+    final cycle point = 2016-06-30
+    
+    [[graph]]
+        
+        R1 = """
+        setup
+        """
+        
+        P1D = """
+            setup[^] => load => preprocess
+        """
 
 [runtime]
     [[root]]
         [[[environment]]]
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
-        
+            PYTHON="${VENV}/bin/python"
+            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
+            DOY=$(date -d "$DATE" +%j)
+            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/
+            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/output/
 
     [[setup]]
         script = """
@@ -23,31 +32,21 @@
             pip install "$CYLC_WORKFLOW_RUN_DIR"
         """
 
-    [[environment<date>]]
+    [[load]]
         script = """
-            DATE=${CYLC_TASK_PARAM_date}
-            DOY=$(date -d "$DATE" +%j)
-            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/
-            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${DATE}/output/
             mkdir -p "$IMGDIR"
-            mkdir -p "$PREPROCESSDIR"
-            . "${VENV}/bin/activate"
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/tci.tiff --verbose --kind truecolor --datetime ${DATE}
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/cld.tiff --verbose --kind cloud --datetime ${DATE}
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/lnd.tiff --verbose --kind landmask --datetime ${DATE}
         """
 
-    [[load<date>]]
-        inherit = environment<date>
+    [[preprocess]]
         script = """
-            python -m ebfloeseg.load $IMGDIR/tci.tiff --kind truecolor --datetime ${CYLC_TASK_PARAM_date}
-            python -m ebfloeseg.load $IMGDIR/cld.tiff --kind cloud --datetime ${CYLC_TASK_PARAM_date}
-            python -m ebfloeseg.load $IMGDIR/lnd.tiff --kind landmask --datetime ${CYLC_TASK_PARAM_date}
-        """
-
-    [[preprocess<date>]]
-        inherit = environment<date>
-        script = """
-        python -m ebfloeseg.run \
+        mkdir -p "$PREPROCESSDIR"
+        ${PYTHON} -m ebfloeseg.run \
             "${IMGDIR}/tci.tiff" \
             "${IMGDIR}/cld.tiff" \
             "${IMGDIR}/lnd.tiff" \
-            "${PREPROCESSDIR}"
+            "${PREPROCESSDIR}" \
+            --verbose
         """
