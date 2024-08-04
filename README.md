@@ -64,3 +64,13 @@ or on one line:
 ```bash
 cylc stop ebseg/* ; cylc install . && cylc play ebseg && cylc tui ebseg
 ```
+
+
+## Running on oscar
+```bash
+module load python/3.11.0s-ixrhc3q
+module load gdal
+. .venv/bin/activate
+```
+
+... then run commands as usual.

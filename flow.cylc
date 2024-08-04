@@ -6,7 +6,7 @@
 
 [scheduling]
     initial cycle point = 2016-06-01
-    final cycle point = 2016-06-01
+    final cycle point = 2017-06-01
     
     [[graph]]
         
@@ -14,17 +14,22 @@
             setup
         """
         
-        P1D = """
+        P28D = """
             setup[^] => load<location> => preprocess<location>
         """
 
 [runtime]
     [[root]]
+        
+        platform = oscar
+        execution time limit = PT5M
+
         [[[environment]]]
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
     
     [[setup]]
+
         script = """
             python3.11 -m venv "$VENV"
             . "${VENV}/bin/activate"
