@@ -24,7 +24,8 @@
 				"ms-azuretools.vscode-docker",
 				"github.vscode-github-actions",
 				"analytic-signal.preview-tiff",
-				"ms-toolsai.jupyter"
+				"ms-toolsai.jupyter",
+				"mechatroner.rainbow-csv"
 			]
 		}
 	},
