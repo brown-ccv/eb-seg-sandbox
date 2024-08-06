@@ -1,4 +1,6 @@
+import datetime
 from logging import getLogger
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -8,8 +10,9 @@ import skimage
 from skimage.filters import threshold_local
 from skimage.morphology import diamond, opening
 import rasterio
+from rasterio.enums import ColorInterp
 
-from ebfloeseg.masking import maskrgb, mask_image, create_cloud_mask
+from ebfloeseg.masking import create_land_mask, maskrgb, mask_image, create_cloud_mask
 from ebfloeseg.savefigs import imsave, save_ice_mask_hist
 from ebfloeseg.utils import (
     write_mask_values,
@@ -21,13 +24,14 @@ from ebfloeseg.utils import (
 
 
 def extract_features(
-    output, red_c, target_dir, res, sat, doy
-):  # adding doy temporarily for testing. TODO: use doy for subdir
-    # fname = target_dir / f"{res}_{sat}_props.csv"
-    fname = target_dir / f"{res}_{sat}_props.csv"
+    output,
+    red_c,
+    target_dir,
+    fname,
+):
     props = get_region_properties(output, red_c)
     df = pd.DataFrame.from_dict(props)
-    df.to_csv(fname)
+    df.to_csv(target_dir / fname)
 
 
 def get_remove_small_mask(watershed, it):
@@ -62,27 +66,39 @@ def _preprocess(
     erosion_kernel_size,
     save_figs,
     save_direc,
+    doy="",
+    year="",
+    sat="",
+    res="",
+    fname_prefix="",
 ):
     tci = rasterio.open(ftci)
-    doy, year, sat = getmeta(fcloud)
-    res = getres(doy, year)
-    save_direc = save_direc / doy
+
     save_direc.mkdir(exist_ok=True, parents=True)
 
     cloud_mask = create_cloud_mask(fcloud)
 
-    red_c, green_c, blue_c = tci.read()  # these are different than the layers in rgb
+    match tci.colorinterp:
+        case (ColorInterp.red, ColorInterp.green, ColorInterp.blue):
+            red_c, green_c, blue_c = tci.read()
+            assert tci.colorinterp[0] is ColorInterp.red
+        case (ColorInterp.red, ColorInterp.green, ColorInterp.blue, _):
+            red_c, green_c, blue_c, _ = tci.read()
+        case _:
+            msg = "unknown number of dimensions %s" % tci.colorinterp
+            raise ValueError(msg)
+
     rgb_masked = np.dstack([red_c, green_c, blue_c])  # masked below
 
     maskrgb(rgb_masked, cloud_mask)
     if save_figs:
-        fname = "cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, save_direc, doy, fname)
+        fname = f"{fname_prefix}cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, save_direc, fname)
 
     maskrgb(rgb_masked, land_mask)
     if save_figs:
-        fname = "land_cloud_mask_on_rgb.tif"
-        imsave(tci, rgb_masked, save_direc, doy, fname)
+        fname = f"{fname_prefix}land_cloud_mask_on_rgb.tif"
+        imsave(tci, rgb_masked, save_direc, fname)
 
     ## adaptive threshold for ice mask
     red_masked = rgb_masked[:, :, 0]
@@ -92,7 +108,14 @@ def _preprocess(
     ow_cut_min, ow_cut_max, bins = get_wcuts(red_masked)
 
     if save_figs:
-        save_ice_mask_hist(red_masked, bins, ow_cut_min, ow_cut_max, doy, save_direc)
+        save_ice_mask_hist(
+            red_masked=red_masked,
+            bins=bins,
+            mincut=ow_cut_min,
+            maxcut=ow_cut_max,
+            target_dir=save_direc,
+            fname=f"{fname_prefix}ice_mask_hist.png",
+        )
 
     thresh_adaptive = np.clip(thresh_adaptive, ow_cut_min, ow_cut_max)
 
@@ -100,17 +123,21 @@ def _preprocess(
 
     # a simple text file with columns: 'doy','ice_area','unmasked','sic'
     write_mask_values(
-        land_mask, land_mask + cloud_mask, ice_mask, doy, year, save_direc
+        lmd=land_mask + cloud_mask,
+        ice_mask=ice_mask,
+        doy=doy,
+        save_direc=save_direc,
+        fname=f"{fname_prefix}mask_values.txt",
     )
 
     # saving ice mask
+    fname = f"{fname_prefix}ice_mask_bw.tif"
     if save_figs:
         imsave(
-            tci,
-            ice_mask,
-            save_direc,
-            doy,
-            "ice_mask_bw.tif",
+            tci=tci,
+            img=ice_mask,
+            save_direc=save_direc,
+            fname=fname,
             count=1,
             rollaxis=False,
             as_uint8=True,
@@ -185,13 +212,12 @@ def _preprocess(
         watershed[np.isin(watershed, df[df.area < area_lim].label.values)] = 1
 
         if save_figs:
-            fname = f"identification_round_{r}.tif"
+            fname = f"{fname_prefix}identification_round_{r}.tif"
             imsave(
-                tci,
-                watershed,
-                save_direc,
-                doy,
-                fname,
+                tci=tci,
+                img=watershed,
+                save_direc=save_direc,
+                fname=fname,
                 count=1,
                 rollaxis=False,
                 as_uint8=True,
@@ -205,16 +231,27 @@ def _preprocess(
 
     # saving the props table
     output = opening(output)
-    extract_features(output, red_c, save_direc, res, sat, doy)
+    fname_infix = ""
+    if sat:
+        fname_infix = f"{sat}_{fname_infix}"
+    if res:
+        fname_infix = f"{res}_{fname_infix}"
+
+    extract_features(
+        output, red_c, save_direc, fname=f"{fname_prefix}{fname_infix}props.csv"
+    )
 
     # saving the label floes tif
-    fname = f"{sat}_final.tif"
+    fname = "final.tif"
+    if sat:
+        fname = f"{sat}_{fname}"
+    if fname_prefix:
+        fname = f"{fname_prefix}{fname}"
     imsave(
-        tci,
-        output,
-        save_direc,
-        doy,
-        fname,
+        tci=tci,
+        img=output,
+        save_direc=save_direc,
+        fname=fname,
         count=1,
         rollaxis=False,
         as_uint8=True,
@@ -235,17 +272,70 @@ def preprocess(
     save_direc,
 ):
     try:
+        doy, year, sat = getmeta(fcloud)
+        res = getres(doy, year)
+        save_direc = save_direc / doy
+        fname_prefix = ""
+
         _preprocess(
-            ftci,
-            fcloud,
-            land_mask,
-            itmax,
-            itmin,
-            step,
-            erosion_kernel_type,
-            erosion_kernel_size,
-            save_figs,
-            save_direc,
+            ftci=ftci,
+            fcloud=fcloud,
+            land_mask=land_mask,
+            itmax=itmax,
+            itmin=itmin,
+            step=step,
+            erosion_kernel_type=erosion_kernel_type,
+            erosion_kernel_size=erosion_kernel_size,
+            save_figs=save_figs,
+            save_direc=save_direc,
+            doy=doy,
+            year=year,
+            sat=sat,
+            res=res,
+            fname_prefix=fname_prefix,
+        )
+    except Exception as e:
+        logger.exception(f"Error processing {fcloud} and {ftci}: {e}")
+        raise
+
+
+def preprocess_b(
+    ftci,
+    fcloud,
+    fland,
+    itmax,
+    itmin,
+    step,
+    erosion_kernel_type,
+    erosion_kernel_size,
+    save_figs,
+    save_direc,
+    fname_prefix,
+    date: Optional[datetime.datetime],
+):
+    try:
+        if date is not None:
+            doy = date.timetuple().tm_yday
+            year = date.year
+        else:
+            doy = None
+            year = None
+        _preprocess(
+            ftci=ftci,
+            fcloud=fcloud,
+            land_mask=create_land_mask(fland),
+            itmax=itmax,
+            itmin=itmin,
+            step=step,
+            erosion_kernel_type=erosion_kernel_type,
+            erosion_kernel_size=erosion_kernel_size,
+            save_figs=save_figs,
+            save_direc=save_direc,
+            doy=doy,
+            year=year,
+            sat=None,
+            res=None,
+            fname_prefix=fname_prefix,
         )
     except Exception as e:
         logger.exception(f"Error processing {fcloud} and {ftci}: {e}")

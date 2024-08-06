@@ -43,6 +43,14 @@ Use the "Reopen in container" command in VSCode or as a GitHub codespace.
 ## CLI
 Upon installation the `fsdproc` command will be available. View its help with `fsdproc --help`.
 
+## Loading and Running
+```bash
+python -m ebfloeseg.load data/tci.tiff --kind truecolor
+python -m ebfloeseg.load data/cld.tiff --kind cloud 
+python -m ebfloeseg.load data/lnd.tiff --kind landmask
+python -m ebfloeseg.run data/tci.tiff data/cld.tiff data/lnd.tiff data/
+```
+
 ## Cylc
 To run the `cylc` workflow with the test data, run:
 ```bash
@@ -55,4 +63,14 @@ cylc tui ebseg          # opens the text user interface
 or on one line:
 ```bash
 cylc stop ebseg/* ; cylc install . && cylc play ebseg && cylc tui ebseg
+```
+
+
+## OSCAR
+
+The same Cylc configuration can be used on OSCAR, with the settings in `cylc/oscar/global.cylc`.
+Install those using:
+```bash
+mkdir -p ~/.cylc/flow
+cp ./cylc/oscar/global.cylc ~/.cylc/flow/global.cylc
 ```

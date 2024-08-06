@@ -12,11 +12,11 @@ def test_imsave(tmp_path):
         img = np.dstack(tci.read()[:])
 
         # test without res provided
-        imsave(tci, img, tmp_path, "doy", "fname", count=3)
+        imsave(tci, img, tmp_path, "fname", count=3)
         assert tmp_path.joinpath("fname").exists()
 
         # test with res provided
-        imsave(tci, img, tmp_path, "doy", "fnameres", count=3, res="res")
+        imsave(tci, img, tmp_path, "fnameres", count=3, res="res")
         assert tmp_path.joinpath("res_fnameres").exists()
 
         # test with as_uint8
@@ -24,7 +24,6 @@ def test_imsave(tmp_path):
             tci,
             img[:, :, 1],
             tmp_path,
-            "doy",
             "fnameuint8",
             count=1,
             as_uint8=True,

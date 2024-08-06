@@ -1,30 +1,62 @@
 [scheduler]
     allow implicit tasks = True
+
+[task parameters]
+    location = beaufort_sea, hudson_bay
+
 [scheduling]
+    initial cycle point = 2016-06-01
+    final cycle point = 2016-06-01
+    
     [[graph]]
+        
         R1 = """
-            setup_environment => load_data
-            load_data => preprocess
+            setup
         """
+        
+        P1D = """
+            setup[^] => load<location> => preprocess<location>
+        """
+
 [runtime]
-    [[setup_environment]]
+    [[root]]
+        [[[environment]]]
+            VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
+            PYTHON="${VENV}/bin/python"
+    
+    [[setup]]
         script = """
-            python3.11 -m venv "$CYLC_WORKFLOW_SHARE_DIR/venv"
-            source "$CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate"
+            python3.11 -m venv "$VENV"
+            . "${VENV}/bin/activate"
             pip install "$CYLC_WORKFLOW_RUN_DIR"
         """
+    
+    [[<location>]]
+        [[[environment]]]
+            LOCATION=${CYLC_TASK_PARAM_location}
+            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
+            DOY=$(date -d "$DATE" +%j)
+            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${LOCATION}/${DATE}/
+            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${LOCATION}/${DATE}/output
 
-    [[load_data]]
+    [[load<location>]]
+        inherit = <location>
         script = """
-            mkdir $CYLC_WORKFLOW_SHARE_DIR/data
-            . $CYLC_WORKFLOW_SHARE_DIR/venv/bin/activate
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/tci.tiff --kind truecolor
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/cld.tiff --kind cloud 
-            python -m ebfloeseg.load $CYLC_WORKFLOW_SHARE_DIR/data/lnd.tiff --kind landmask
+            mkdir -p "$IMGDIR"
+            BBOX=$($PYTHON -c "import pandas; print(','.join(str(s) for s in list(pandas.read_csv('${CYLC_WORKFLOW_RUN_DIR}/locations.csv', index_col='location').loc['${LOCATION}'][['left_x', 'lower_y', 'right_x', 'top_y']])))")
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/tci.tiff --debug --kind truecolor --datetime ${DATE} --bbox $BBOX
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/cld.tiff --debug --kind cloud --datetime ${DATE} --bbox $BBOX
+            ${PYTHON} -m ebfloeseg.load $IMGDIR/lnd.tiff --debug --kind landmask --datetime ${DATE} --bbox $BBOX
         """
 
-    [[preprocess]]
+    [[preprocess<location>]]
+        inherit = <location>
         script = """
-        cd $CYLC_WORKFLOW_RUN_DIR
-        $CYLC_WORKFLOW_SHARE_DIR/venv/bin/fsdproc -c configjob.toml
+        mkdir -p "$PREPROCESSDIR"
+        ${PYTHON} -m ebfloeseg.run \
+            "${IMGDIR}/tci.tiff" \
+            "${IMGDIR}/cld.tiff" \
+            "${IMGDIR}/lnd.tiff" \
+            "${PREPROCESSDIR}" \
+            --debug
         """

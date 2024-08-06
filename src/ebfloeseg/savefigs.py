@@ -12,7 +12,6 @@ def imsave(
     tci: DatasetReader,
     img: NDArray,
     save_direc: Path,
-    doy: str,
     fname: Union[str, Path],
     count: int = 3,
     compress: str = "lzw",
@@ -44,11 +43,18 @@ def imsave(
 
 
 def save_ice_mask_hist(
-    red_masked, bins, mincut, maxcut, doy, target_dir, color="r", figsize=(6, 2)
+    red_masked,
+    bins,
+    mincut,
+    maxcut,
+    target_dir,
+    fname: Union[str, Path],
+    color="r",
+    figsize=(6, 2),
 ):
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     plt.hist(red_masked.flatten(), bins=bins, color=color)
     plt.axvline(mincut)
     plt.axvline(maxcut)
-    plt.savefig(target_dir / f"ice_mask_hist.png")
+    plt.savefig(target_dir / fname)
     return ax
