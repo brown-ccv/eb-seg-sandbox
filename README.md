@@ -45,10 +45,11 @@ Upon installation the `fsdproc` command will be available. View its help with `f
 
 ## Loading and Running
 ```bash
-python -m ebfloeseg.load data/tci.tiff --kind truecolor
-python -m ebfloeseg.load data/cld.tiff --kind cloud 
-python -m ebfloeseg.load data/lnd.tiff --kind landmask
-python -m ebfloeseg.run data/tci.tiff data/cld.tiff data/lnd.tiff data/
+mkdir -p data/
+fsdproc load data/tci.tiff --kind truecolor
+fsdproc load data/cld.tiff --kind cloud 
+fsdproc load data/lnd.tiff --kind landmask
+fsdproc process data/tci.tiff data/cld.tiff data/lnd.tiff data/
 ```
 
 ## Cylc
