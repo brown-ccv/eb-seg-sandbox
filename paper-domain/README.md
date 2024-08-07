@@ -1,14 +1,14 @@
 ## Cylc
 To run the `cylc` workflow with the test data, run:
 ```bash
-cylc stop paper-domain*/*
+cylc stop ebseg-paper-domain*/*
 cylc validate .
 
-cylc install . -n paper-domain-06
-cylc play paper-domain-06 --initial-cycle-point=2006-05-04 --final-cycle-point=2006-05-06
+cylc install . -n ebseg-paper-domain-06
+cylc play ebseg-paper-domain-06 --initial-cycle-point=2006-05-04 --final-cycle-point=2006-05-06
 
-cylc install . -n paper-domain-08
-cylc play paper-domain-08 --initial-cycle-point=2008-07-13 --final-cycle-point=2008-07-15
+cylc install . -n ebseg-paper-domain-08
+cylc play ebseg-paper-domain-08 --initial-cycle-point=2008-07-13 --final-cycle-point=2008-07-15
 
 cylc tui
 ```
