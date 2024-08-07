@@ -177,6 +177,7 @@ def load(
         crs=crs,
         ts=ts,
         format=format,
+        validate=validate,
     )
 
     with open(outfile, "wb") as f:
