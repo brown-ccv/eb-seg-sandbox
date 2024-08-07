@@ -52,6 +52,12 @@ fsdproc load data/lnd.tiff --kind landmask
 fsdproc process data/tci.tiff data/cld.tiff data/lnd.tiff data/
 ```
 
+To get data from Aqua, rather than terra: 
+```bash
+fsdproc load data/tci.tiff --kind truecolor --satellite aqua
+fsdproc load data/cld.tiff --kind cloud --satellite aqua
+```
+
 ## Cylc
 To run the `cylc` workflow with the test data, run:
 ```bash
