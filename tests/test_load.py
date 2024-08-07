@@ -4,7 +4,7 @@ from io import BytesIO
 import pytest
 import requests_mock
 
-from ebfloeseg.io_ import load, ImageType
+from ebfloeseg.load import load, ImageType, Satellite
 
 
 def are_equal(b1: BytesIO, p2):
@@ -13,11 +13,18 @@ def are_equal(b1: BytesIO, p2):
 
 @pytest.mark.smoke
 @pytest.mark.slow
-@pytest.mark.parametrize("channel", ImageType)
-def test_load(channel):
-    result = load(kind=channel, scale=10000)
+@pytest.mark.parametrize("kind", ImageType)
+def test_load(kind):
+    result = load(kind=kind, scale=10000)
     data = BytesIO(result["content"])
-    assert are_equal(data, Path("tests/load/") / f"{channel.value}.tiff")
+    assert are_equal(data, Path("tests/load/") / f"{kind.value}.tiff")
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("satellite", Satellite)
+@pytest.mark.parametrize("kind", ImageType)
+def test_load(kind, satellite):
+    load(kind=kind, satellite=satellite, scale=100000)
 
 
 def test_error_on_empty_file():
