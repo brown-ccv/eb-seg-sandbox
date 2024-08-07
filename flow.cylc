@@ -44,7 +44,7 @@
         inherit = <location>
         script = """
             mkdir -p "$IMGDIR"
-            BBOX=$($PYTHON -c "import pandas; print(','.join(str(s) for s in list(pandas.read_csv('${CYLC_WORKFLOW_RUN_DIR}/locations.csv', index_col='location').loc['${LOCATION}'][['left_x', 'lower_y', 'right_x', 'top_y']])))")
+            BBOX=$(${FSDPROC} get-bbox "${CYLC_WORKFLOW_RUN_DIR}/locations.csv" "${LOCATION}")
             ${FSDPROC} load $IMGDIR/tci.tiff --kind truecolor --datetime ${DATE} --bbox $BBOX
             ${FSDPROC} load $IMGDIR/cld.tiff --kind cloud --datetime ${DATE} --bbox $BBOX
             ${FSDPROC} load $IMGDIR/lnd.tiff --kind landmask --datetime ${DATE} --bbox $BBOX
