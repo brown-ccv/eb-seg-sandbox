@@ -1,0 +1,74 @@
+[scheduler]
+    allow implicit tasks = True
+
+[task parameters]
+    location = beaufort_sea
+    satellite = aqua, terra
+
+[scheduling]
+    initial cycle point = 2006-05-04
+    final cycle point = 2006-05-06 
+    
+    [[graph]]
+        
+        R1 = """
+            setup
+        """
+        
+        P1D = """
+            setup[^] => load<location><satellite> => preprocess<location><satellite>
+        """
+
+    [[queues]]
+        [[[q_preprocess]]]
+            limit = 2
+            members = preprocess<location><satellite>
+        [[[q_load]]]
+            limit = 2
+            members = load<location><satellite>
+
+[runtime]
+    [[root]]
+        [[[environment]]]
+            VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
+            PYTHON="${VENV}/bin/python"
+            FSDPROC="${VENV}/bin/fsdproc --debug"
+            PIPPACKAGENAME="/workspaces/ebseg"
+    
+    [[setup]]
+        script = """
+            python3.11 -m venv "$VENV"
+            . "${VENV}/bin/activate"
+            pip install "${PIPPACKAGENAME}"
+        """
+    
+    [[<location><satellite>]]
+        [[[environment]]]
+            LOCATION=${CYLC_TASK_PARAM_location}
+            SATELLITE=${CYLC_TASK_PARAM_satellite}
+            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
+            DOY=$(date -d "$DATE" +%j)
+            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/
+            IMGPREFIX=${LOCATION}-${DATE}-${SATELLITE}
+            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${IMGPREFIX}-output
+
+    [[load<location, satellite>]]
+        inherit = <location><satellite>
+        script = """
+            mkdir -p "$IMGDIR"
+            BBOX=$(${FSDPROC} get-bbox "${CYLC_WORKFLOW_RUN_DIR}/locations.csv" "${LOCATION}")
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"
+        """
+
+    [[preprocess<location><satellite>]]
+        inherit = <location><satellite>
+        script = """
+        mkdir -p "$PREPROCESSDIR"
+        ${FSDPROC} process \
+            "${IMGDIR}/${IMGPREFIX}-truecolor.tiff" \
+            "${IMGDIR}/${IMGPREFIX}-cloud.tiff" \
+            "${IMGDIR}/${IMGPREFIX}-land.tiff" \
+            "${PREPROCESSDIR}"
+        """
