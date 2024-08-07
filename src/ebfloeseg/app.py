@@ -23,10 +23,11 @@ app = typer.Typer(name=name, add_completion=False)
 
 
 @app.callback()
-def main(quiet: Annotated[bool, typer.Option()] = False,
-         verbose: Annotated[bool, typer.Option()] = False,
-         debug: Annotated[bool, typer.Option()] = False,
-         ):
+def main(
+    quiet: Annotated[bool, typer.Option()] = False,
+    verbose: Annotated[bool, typer.Option()] = False,
+    debug: Annotated[bool, typer.Option()] = False,
+):
     if debug:
         logging.basicConfig(level=logging.DEBUG)
     elif verbose:
@@ -90,7 +91,10 @@ def parse_config_file(config_file: Path) -> ConfigParams:
     return ConfigParams(**defaults)
 
 
-@app.command(help="TODO: add description", epilog=f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landfile")
+@app.command(
+    help="TODO: add description",
+    epilog=f"Example: {name} --data-direc /path/to/data --save_figs --save-direc /path/to/save --land /path/to/landfile",
+)
 def process_batch(
     config_file: Path = typer.Option(
         ...,
@@ -242,13 +246,11 @@ def process(
     ] = "",
     itmax: Annotated[
         int,
-        typer.Option(..., "--itmax",
-                     help="maximum number of iterations for erosion"),
+        typer.Option(..., "--itmax", help="maximum number of iterations for erosion"),
     ] = 8,
     itmin: Annotated[
         int,
-        typer.Option(..., "--itmin",
-                     help="minimum number of iterations for erosion"),
+        typer.Option(..., "--itmin", help="minimum number of iterations for erosion"),
     ] = 3,
     step: Annotated[int, typer.Option(..., "--step")] = -1,
     kernel_type: Annotated[
