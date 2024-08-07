@@ -1,0 +1,8 @@
+.devcontainer/
+.git/
+.github/
+.venv/
+.vscode
+.gitignore
+README.md
+
