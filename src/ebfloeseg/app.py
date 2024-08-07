@@ -14,8 +14,8 @@ import pandas
 
 from ebfloeseg.masking import create_land_mask
 from ebfloeseg.preprocess import preprocess, preprocess_b
-from ebfloeseg.io_ import load as load_
-from ebfloeseg.io_ import ImageType, Satellite
+from ebfloeseg.load import load as load_
+from ebfloeseg.load import ImageType, Satellite
 
 _logger = logging.getLogger(__name__)
 
