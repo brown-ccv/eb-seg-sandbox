@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ebfloeseg.app import load, ImageType
+from ebfloeseg.app import load, ImageType, Satellite
 
 
 def are_equal(p1, p2):
@@ -11,9 +11,16 @@ def are_equal(p1, p2):
 
 @pytest.mark.smoke
 @pytest.mark.slow
-@pytest.mark.parametrize("channel", ImageType)
-def test_load(tmpdir, channel):
+@pytest.mark.parametrize("kind", ImageType)
+def test_load(tmpdir, kind):
 
-    filename = f"{channel.value}.tiff"
-    load(tmpdir / filename, kind=channel, scale=10000)
+    filename = f"{kind.value}.tiff"
+    load(tmpdir / filename, kind=kind, scale=10000)
     assert are_equal(tmpdir / filename, Path("tests/load/") / filename)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("satellite", Satellite)
+@pytest.mark.parametrize("kind", ImageType)
+def test_load(tmp_path, kind, satellite):
+    load(tmp_path / "out.tiff", kind=kind, satellite=satellite, scale=100000)
