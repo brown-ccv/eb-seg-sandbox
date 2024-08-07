@@ -9,12 +9,13 @@ from enum import Enum
 from pathlib import Path
 from typing import Annotated, Optional
 
-import requests
 import typer
 import pandas
 
 from ebfloeseg.masking import create_land_mask
 from ebfloeseg.preprocess import preprocess, preprocess_b
+from ebfloeseg.load import load as load_
+from ebfloeseg.load import ImageType, Satellite
 
 _logger = logging.getLogger(__name__)
 
@@ -153,39 +154,6 @@ def process_batch(
             future.result()
 
 
-class ImageType(str, Enum):
-    truecolor = "truecolor"
-    cloud = "cloud"
-    landmask = "landmask"
-
-
-class Satellite(str, Enum):
-    terra = "terra"
-    aqua = "aqua"
-
-
-def get_width_height(bbox: str, scale: float):
-    """Get width and height for a bounding box where one pixel corresponds to `scale` bounding box units
-
-    Examples:
-        >>> get_width_height("0,0,1,1", 10)
-        (10, 10)
-
-        >>> get_width_height("0,0,1,5", 10)
-        (2, 10)
-
-        >>> get_width_height("0,0,1,5", 10)
-        (2, 10)
-
-    """
-    x1, y1, x2, y2 = [float(n) for n in bbox.split(",")]
-    x_length = abs(x2 - x1)
-    y_length = abs(y2 - y1)
-
-    width, height = int(x_length / scale), int(y_length / scale)
-    return width, height
-
-
 @app.command()
 def load(
     outfile: Annotated[Path, typer.Argument()],
@@ -200,44 +168,24 @@ def load(
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
     format: str = "image/tiff",
+    validate: Annotated[bool, typer.Option(help="validate the image")] = True,
 ):
 
-    match (satellite, kind):
-        case (Satellite.terra, ImageType.truecolor):
-            layers = "MODIS_Terra_CorrectedReflectance_TrueColor"
-        case (Satellite.terra, ImageType.cloud):
-            layers = "MODIS_Terra_Cloud_Fraction_Day"
-        case (Satellite.aqua, ImageType.truecolor):
-            layers = "MODIS_Aqua_CorrectedReflectance_TrueColor"
-        case (Satellite.aqua, ImageType.cloud):
-            layers = "MODIS_Aqua_Cloud_Fraction_Day"
-        case (_, ImageType.landmask):
-            layers = "OSM_Land_Mask"
-        case _:
-            msg = "satellite=%s and image kind=%s not supported" % (satellite, kind)
-            raise NotImplementedError(msg)
-
-    width, height = get_width_height(bbox, scale)
-    _logger.info("Width: %s Height: %s" % (width, height))
-
-    url = f"https://wvs.earthdata.nasa.gov/api/v1/snapshot"
-    payload = {
-        "REQUEST": "GetSnapshot",
-        "TIME": datetime,
-        "BBOX": bbox,
-        "CRS": crs,
-        "LAYERS": layers,
-        "WRAP": wrap,
-        "FORMAT": format,
-        "WIDTH": width,
-        "HEIGHT": height,
-        "ts": ts,
-    }
-    r = requests.get(url, params=payload, allow_redirects=True)
-    r.raise_for_status()
+    result = load_(
+        datetime=datetime,
+        wrap=wrap,
+        satellite=satellite,
+        kind=kind,
+        bbox=bbox,
+        scale=scale,
+        crs=crs,
+        ts=ts,
+        format=format,
+        validate=validate,
+    )
 
     with open(outfile, "wb") as f:
-        f.write(r.content)
+        f.write(result.content)
 
     return
 
