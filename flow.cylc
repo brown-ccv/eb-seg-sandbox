@@ -23,6 +23,7 @@
         [[[environment]]]
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
+            FSDPROC="${VENV}/bin/fsdproc --debug"
     
     [[setup]]
         script = """
@@ -44,19 +45,18 @@
         script = """
             mkdir -p "$IMGDIR"
             BBOX=$($PYTHON -c "import pandas; print(','.join(str(s) for s in list(pandas.read_csv('${CYLC_WORKFLOW_RUN_DIR}/locations.csv', index_col='location').loc['${LOCATION}'][['left_x', 'lower_y', 'right_x', 'top_y']])))")
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/tci.tiff --debug --kind truecolor --datetime ${DATE} --bbox $BBOX
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/cld.tiff --debug --kind cloud --datetime ${DATE} --bbox $BBOX
-            ${PYTHON} -m ebfloeseg.load $IMGDIR/lnd.tiff --debug --kind landmask --datetime ${DATE} --bbox $BBOX
+            ${FSDPROC} load $IMGDIR/tci.tiff --kind truecolor --datetime ${DATE} --bbox $BBOX
+            ${FSDPROC} load $IMGDIR/cld.tiff --kind cloud --datetime ${DATE} --bbox $BBOX
+            ${FSDPROC} load $IMGDIR/lnd.tiff --kind landmask --datetime ${DATE} --bbox $BBOX
         """
 
     [[preprocess<location>]]
         inherit = <location>
         script = """
         mkdir -p "$PREPROCESSDIR"
-        ${PYTHON} -m ebfloeseg.run \
+        ${FSDPROC} process \
             "${IMGDIR}/tci.tiff" \
             "${IMGDIR}/cld.tiff" \
             "${IMGDIR}/lnd.tiff" \
-            "${PREPROCESSDIR}" \
-            --debug
+            "${PREPROCESSDIR}"
         """
