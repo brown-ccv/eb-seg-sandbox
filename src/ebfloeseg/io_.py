@@ -70,7 +70,7 @@ def load(
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
     format: str = "image/tiff",
-    validate_not_empty: bool = False,
+    validate: bool = True,
 ):
 
     match (satellite, kind):
@@ -109,7 +109,7 @@ def load(
 
     img = rasterio.open(io.BytesIO(r.content))
 
-    if validate_not_empty:
+    if validate:
         assert image_not_empty(img)
 
     return {"content": r.content, "img": img}

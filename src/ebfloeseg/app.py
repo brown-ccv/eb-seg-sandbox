@@ -164,6 +164,7 @@ def load(
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
     format: str = "image/tiff",
+    validate: Annotated[bool, typer.Option(help="validate the image")] = True,
 ):
 
     result = load_(
