@@ -4,7 +4,6 @@ from enum import Enum
 
 import rasterio
 import requests
-import matplotlib.pyplot as plt
 import numpy as np
 from rasterio.enums import ColorInterp
 
