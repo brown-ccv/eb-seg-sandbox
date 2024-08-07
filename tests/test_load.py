@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ebfloeseg.load import main, ImageType
+from ebfloeseg.app import load, ImageType
 
 
 def are_equal(p1, p2):
@@ -15,5 +15,5 @@ def are_equal(p1, p2):
 def test_load(tmpdir, channel):
 
     filename = f"{channel.value}.tiff"
-    main(tmpdir / filename, kind=channel, scale=10000)
+    load(tmpdir / filename, kind=channel, scale=10000)
     assert are_equal(tmpdir / filename, Path("tests/load/") / filename)
