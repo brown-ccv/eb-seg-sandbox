@@ -155,6 +155,11 @@ class ImageType(str, Enum):
     landmask = "landmask"
 
 
+class Satellite(str, Enum):
+    terra = "terra"
+    aqua = "aqua"
+
+
 def get_width_height(bbox: str, scale: float):
     """Get width and height for a bounding box where one pixel corresponds to `scale` bounding box units
 
@@ -182,6 +187,7 @@ def load(
     outfile: Annotated[Path, typer.Argument()],
     datetime: str = "2016-07-01T00:00:00Z",
     wrap: str = "day",
+    satellite: Satellite = Satellite.terra,
     kind: ImageType = ImageType.truecolor,
     bbox: str = "-2334051.0214676396,-414387.78951688844,-1127689.8419350237,757861.8364224486",
     scale: Annotated[
@@ -192,13 +198,20 @@ def load(
     format: str = "image/tiff",
 ):
 
-    match kind:
-        case ImageType.truecolor:
+    match (satellite, kind):
+        case (Satellite.terra, ImageType.truecolor):
             layers = "MODIS_Terra_CorrectedReflectance_TrueColor"
-        case ImageType.cloud:
+        case (Satellite.terra, ImageType.cloud):
             layers = "MODIS_Terra_Cloud_Fraction_Day"
-        case ImageType.landmask:
+        case (Satellite.aqua, ImageType.truecolor):
+            layers = "MODIS_Aqua_CorrectedReflectance_TrueColor"
+        case (Satellite.aqua, ImageType.cloud):
+            layers = "MODIS_Aqua_Cloud_Fraction_Day"
+        case (_, ImageType.landmask):
             layers = "OSM_Land_Mask"
+        case _:
+            msg = "satellite=%s and image kind=%s not supported" % (satellite, kind)
+            raise NotImplementedError(msg)
 
     width, height = get_width_height(bbox, scale)
     _logger.info("Width: %s Height: %s" % (width, height))
