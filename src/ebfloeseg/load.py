@@ -1,3 +1,4 @@
+from collections import namedtuple
 import io
 import logging
 from enum import Enum
@@ -59,6 +60,9 @@ def image_not_empty(img: rasterio.DatasetReader):
             raise ValueError(msg)
 
 
+LoadResult = namedtuple("LoadResult", ["content", "img"])
+
+
 def load(
     datetime: str = "2016-07-01T00:00:00Z",
     wrap: str = "day",
@@ -70,7 +74,7 @@ def load(
     ts: int = 1683675557694,
     format: str = "image/tiff",
     validate: bool = True,
-):
+) -> LoadResult:
 
     match (satellite, kind):
         case (Satellite.terra, ImageType.truecolor):
@@ -111,7 +115,7 @@ def load(
     if validate:
         assert image_not_empty(img)
 
-    return {"content": r.content, "img": img}
+    return LoadResult(r.content, img)
 
 
 if __name__ == "__main__":

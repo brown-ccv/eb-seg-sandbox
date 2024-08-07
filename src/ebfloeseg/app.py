@@ -185,7 +185,7 @@ def load(
     )
 
     with open(outfile, "wb") as f:
-        f.write(result["content"])
+        f.write(result.content)
 
     return
 
