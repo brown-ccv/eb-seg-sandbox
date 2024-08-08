@@ -26,7 +26,6 @@
 
 [runtime]
     [[root]]
-        platform = oscar
         execution time limit = PT5M
         [[[environment]]]
             # PIPPACKAGENAME="git+https://github.com/WilhelmusLab/ebseg.git@add-smarter-image-validation-for-landmasks"
