@@ -130,11 +130,15 @@ def load(
     if validate:
         match (kind):
             case ImageType.truecolor | ImageType.cloud:
-                assert image_not_empty(img)
-                assert ColorInterp.alpha not in img.colorinterp | alpha_not_empty(img)
+                assert image_not_empty(img), "image is empty"
+                assert ColorInterp.alpha not in img.colorinterp | alpha_not_empty(
+                    img
+                ), "alpha channel is empty"
             case ImageType.landmask:
                 # Don't check for image not empty – an empty landmask is very reasonable
-                assert ColorInterp.alpha not in img.colorinterp | alpha_not_empty(img)
+                assert ColorInterp.alpha not in img.colorinterp | alpha_not_empty(
+                    img
+                ), "alpha channel is empty"
 
     return LoadResult(r.content, img)
 
