@@ -11,8 +11,12 @@
     
     [[graph]]
         
+        R1 = """
+            setup
+        """
+
         P1D = """
-            load-init<satellite> => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
+            setup[^] => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
             load<satellite>:succeed-all => preprocess<satellite>
         """
 
@@ -28,14 +32,16 @@
     [[root]]
         execution time limit = PT5M
         [[[environment]]]
-            # PIPPACKAGENAME="git+https://github.com/WilhelmusLab/ebseg.git@add-smarter-image-validation-for-landmasks"
-            PIPPACKAGENAME="/workspaces/ebseg"
+            PIPPACKAGENAME="git+https://github.com/WilhelmusLab/ebseg.git@add-smarter-image-validation-for-landmasks"
             FSDPROC="pipx run --spec ${PIPPACKAGENAME} fsdproc --debug"    
             LOCATION={{ LOCATION }}
             BBOX={{ BBOX }} 
             DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
             DOY=$(date -d "$DATE" +%j)
-    
+    [[setup]]
+        script = """
+            ${FSDPROC} --help
+        """
     [[<satellite>]]
         [[[environment]]]
             SATELLITE=${CYLC_TASK_PARAM_satellite}
@@ -46,27 +52,24 @@
     [[load<satellite>]]
         inherit = <satellite>
 
-    [[load-init<satellite>]]
-        inherit = load<satellite>
-        script = """
-            mkdir -p "$IMGDIR"
-        """
-    
     [[load-truecolor<satellite>]]
         inherit = load<satellite>
         script = """
+            mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-cloud<satellite>]]
         inherit = load<satellite>
         script = """
+            mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-land<satellite>]]
         inherit = load<satellite>
         script = """
+            mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
         """
 
