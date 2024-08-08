@@ -16,7 +16,8 @@
         """
         
         P1D = """
-            setup[^] => load<satellite> => preprocess<satellite>
+            setup[^] => load-init<satellite> => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
+            load<satellite>:succeed-all => preprocess<satellite>
         """
 
     [[queues]]
@@ -25,7 +26,7 @@
             members = preprocess<satellite>
         [[[q_load]]]
             limit = 1
-            members = load<satellite>
+            members = load-truecolor<satellite>, load-cloud<satellite>, load-land<satellite>
 
 [runtime]
     [[root]]
@@ -54,11 +55,29 @@
 
     [[load<satellite>]]
         inherit = <satellite>
+
+    [[load-init<satellite>]]
+        inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            BBOX=$(${FSDPROC} get-bbox "${CYLC_WORKFLOW_RUN_DIR}/locations.csv" "${LOCATION}")
+        """
+
+    
+    [[load-truecolor<satellite>]]
+        inherit = load<satellite>
+        script = """
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+        """
+
+    [[load-cloud<satellite>]]
+        inherit = load<satellite>
+        script = """
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+        """
+
+    [[load-land<satellite>]]
+        inherit = load<satellite>
+        script = """
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"
         """
 
