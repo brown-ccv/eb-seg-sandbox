@@ -18,20 +18,23 @@
 
     [[queues]]
         [[[q_preprocess]]]
-            limit = 2
+            limit = 10
             members = preprocess<satellite>
         [[[q_load]]]
-            limit = 1
+            limit = 5
             members = load-truecolor<satellite>, load-cloud<satellite>, load-land<satellite>
 
 [runtime]
     [[root]]
+        platform = oscar
+        execution time limit = PT5M
         [[[environment]]]
             
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
+            # PIPPACKAGENAME="git+https://github.com/WilhelmusLab/ebseg.git@add-smarter-image-validation-for-landmasks"
             PIPPACKAGENAME="/workspaces/ebseg"
-            FSDPROC="pipx run --spec /workspaces/ebseg fsdproc --debug"    
+            FSDPROC="pipx run --spec ${PIPPACKAGENAME} fsdproc --debug"    
             LOCATION={{ LOCATION }}
             BBOX={{ BBOX }} 
             DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
