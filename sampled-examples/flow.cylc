@@ -82,7 +82,7 @@
     [[load-land<satellite>]]
         inherit = load<satellite>
         script = """
-            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
         """
 
     [[preprocess<satellite>]]
