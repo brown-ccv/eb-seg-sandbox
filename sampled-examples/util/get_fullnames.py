@@ -13,7 +13,13 @@ import pandas
 import typer
 
 
-def main(datafile: pathlib.Path, index_col: str, start: Optional[int] = None, stop: Optional[int] = None, step: Optional[int] = None):
+def main(
+    datafile: pathlib.Path,
+    index_col: str,
+    start: Optional[int] = None,
+    stop: Optional[int] = None,
+    step: Optional[int] = None,
+):
     f = pandas.read_csv(datafile)
     print("\n".join(f[index_col].values[start:stop:step]))
 
