@@ -19,5 +19,5 @@ The same Cylc configuration can be used on OSCAR, with the settings in `cylc/osc
 Install those using:
 ```bash
 mkdir -p ~/.cylc/flow
-cp ./cylc/oscar/global.cylc ~/.cylc/flow/global.cylc
+cp ./oscar/global.cylc ~/.cylc/flow/global.cylc
 ```
