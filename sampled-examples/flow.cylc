@@ -40,7 +40,7 @@
         script = """
             python3.11 -m venv "$VENV"
             . "${VENV}/bin/activate"
-            uv pip install "${PIPPACKAGENAME}"
+            uv pip install "${PIPPACKAGENAME}" --refresh "${PIPPACKAGENAME}"
         """
     
     [[<satellite>]]
