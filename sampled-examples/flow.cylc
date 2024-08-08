@@ -38,10 +38,12 @@
             BBOX={{ BBOX }} 
             DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
             DOY=$(date -d "$DATE" +%j)
+    
     [[setup]]
         script = """
             ${FSDPROC} --help
         """
+    
     [[<satellite>]]
         [[[environment]]]
             SATELLITE=${CYLC_TASK_PARAM_satellite}
