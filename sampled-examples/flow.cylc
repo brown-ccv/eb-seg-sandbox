@@ -31,10 +31,17 @@
 [runtime]
     [[root]]
         [[[environment]]]
+            
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
             FSDPROC="${VENV}/bin/fsdproc --debug"
             PIPPACKAGENAME="/workspaces/ebseg"
+            
+            LOCATION={{ LOCATION }}
+            BBOX={{ BBOX }}
+            
+            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
+            DOY=$(date -d "$DATE" +%j)
     
     [[setup]]
         script = """
@@ -45,10 +52,7 @@
     
     [[<satellite>]]
         [[[environment]]]
-            LOCATION={{ LOCATION }}
             SATELLITE=${CYLC_TASK_PARAM_satellite}
-            DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
-            DOY=$(date -d "$DATE" +%j)
             IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/
             IMGPREFIX=${LOCATION}-${DATE}-${SATELLITE}
             PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${IMGPREFIX}-output
