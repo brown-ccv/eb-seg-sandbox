@@ -22,7 +22,7 @@ class Satellite(str, Enum):
     aqua = "aqua"
 
 
-def get_width_height(bbox: str, scale: float):
+def get_width_height(bbox: tuple[float, float, float, float] | str, scale: float):
     """Get width and height for a bounding box where one pixel corresponds to `scale` bounding box units
 
     Examples:
@@ -36,7 +36,13 @@ def get_width_height(bbox: str, scale: float):
         (2, 10)
 
     """
-    x1, y1, x2, y2 = [float(n) for n in bbox.split(",")]
+    if isinstance(bbox, str):
+        x1, y1, x2, y2 = [float(n) for n in bbox.split(",")]
+    elif isinstance(bbox, tuple):
+        x1, y1, x2, y2 = bbox
+    else:
+        msg = "type of %s not supported" % s
+        raise NotImplementedError(msg)
     x_length = abs(x2 - x1)
     y_length = abs(y2 - y1)
 
@@ -68,7 +74,12 @@ def load(
     wrap: str = "day",
     satellite: Satellite = Satellite.terra,
     kind: ImageType = ImageType.truecolor,
-    bbox: str = "-2334051.0214676396,-414387.78951688844,-1127689.8419350237,757861.8364224486",
+    bbox: tuple[float, float, float, float] = (
+        -2334051.0214676396,
+        -414387.78951688844,
+        -1127689.8419350237,
+        757861.8364224486,
+    ),
     scale: int = 250,
     crs: str = "EPSG:3413",
     ts: int = 1683675557694,
@@ -98,7 +109,7 @@ def load(
     payload = {
         "REQUEST": "GetSnapshot",
         "TIME": datetime,
-        "BBOX": bbox,
+        "BBOX": ",".join(str(f) for f in bbox),
         "CRS": crs,
         "LAYERS": layers,
         "WRAP": wrap,
