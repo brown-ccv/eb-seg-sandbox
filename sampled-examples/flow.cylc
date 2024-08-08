@@ -6,8 +6,8 @@
     satellite = {{ SATELLITES | join(", ")}}
 
 [scheduling]
-    initial cycle point = 2006-05-04
-    final cycle point = 2006-05-06 
+    initial cycle point = {{ START }}
+    final cycle point = {{ END }}
     
     [[graph]]
         
@@ -39,7 +39,7 @@
         script = """
             python3.11 -m venv "$VENV"
             . "${VENV}/bin/activate"
-            pip install "${PIPPACKAGENAME}"
+            uv pip install "${PIPPACKAGENAME}"
         """
     
     [[<satellite>]]
