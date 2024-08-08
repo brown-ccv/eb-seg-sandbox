@@ -2,6 +2,7 @@
 
 ```bash
 pipx install cylc-rose  # this will install cylc and rose
+pipx install uv  # required for faster setup
 ```
 
 ## Cylc
@@ -24,13 +25,20 @@ cp ./cylc/oscar/global.cylc ~/.cylc/flow/global.cylc
 ```
 
 
+## Looping through the case list
 
+```bash
+cylc stop sampled-examples/*; 
+cylc install . && 
+cylc play sampled-examples --icp 2004-07-25 --fcp 2004-07-26 --set=BBOX="-812500.0,-2112500.0,-712500.0,-2012500.0" --set=LOCATION="baffin_bay" && 
+cylc tui sampled-examples
 ```
 
-[template variables]
-START="2006-05-04"
-END="2006-05-06"
-SATELLITE="aqua", "terra"
-LOCATION="beaufort_sea"
 
+```bash
+while IFS="" read -r p || [ -n "$p" ]
+do
+  
+  printf '%s\n' "$p"
+done < all-cases.csv
 ```
