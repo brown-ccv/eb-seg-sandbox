@@ -29,9 +29,6 @@
         platform = oscar
         execution time limit = PT5M
         [[[environment]]]
-            
-            VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
-            PYTHON="${VENV}/bin/python"
             # PIPPACKAGENAME="git+https://github.com/WilhelmusLab/ebseg.git@add-smarter-image-validation-for-landmasks"
             PIPPACKAGENAME="/workspaces/ebseg"
             FSDPROC="pipx run --spec ${PIPPACKAGENAME} fsdproc --debug"    
