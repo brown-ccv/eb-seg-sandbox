@@ -48,7 +48,7 @@ cylc clean sampled-examples
 
 datafile="all-cases.csv"
 index_col="fullname"
-for fullname in $(pipx run util/get_fullnames.py "${datafile}" "${index_col}"); 
+for fullname in $(pipx run util/get_fullnames.py "${datafile}" "${index_col}" --start 100); 
 do   
   cylc install . --run-name=${fullname}
   cylc play sampled-examples/${fullname} $(pipx run util/template.py ${datafile} ${index_col} ${fullname}); 
