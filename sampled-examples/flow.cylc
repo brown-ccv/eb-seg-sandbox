@@ -11,12 +11,8 @@
     
     [[graph]]
         
-        R1 = """
-            setup
-        """
-        
         P1D = """
-            setup[^] => load-init<satellite> => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
+            load-init<satellite> => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
             load<satellite>:succeed-all => preprocess<satellite>
         """
 
@@ -34,21 +30,12 @@
             
             VENV="$CYLC_WORKFLOW_SHARE_DIR/venv"
             PYTHON="${VENV}/bin/python"
-            FSDPROC="${VENV}/bin/fsdproc --debug"
             PIPPACKAGENAME="/workspaces/ebseg"
-            
+            FSDPROC="pipx run --spec /workspaces/ebseg fsdproc --debug"    
             LOCATION={{ LOCATION }}
-            BBOX={{ BBOX }}
-            
+            BBOX={{ BBOX }} 
             DATE=$(isodatetime "$CYLC_TASK_CYCLE_POINT" --print-format CCYY-MM-DD)
             DOY=$(date -d "$DATE" +%j)
-    
-    [[setup]]
-        script = """
-            python3.11 -m venv "$VENV"
-            . "${VENV}/bin/activate"
-            uv pip install "${PIPPACKAGENAME}"
-        """
     
     [[<satellite>]]
         [[[environment]]]
@@ -65,7 +52,6 @@
         script = """
             mkdir -p "$IMGDIR"
         """
-
     
     [[load-truecolor<satellite>]]
         inherit = load<satellite>

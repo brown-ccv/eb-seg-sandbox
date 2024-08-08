@@ -51,7 +51,7 @@ index_col="fullname"
 for fullname in $(python -c """import pandas; f=pandas.read_csv('${datafile}'); print('\n'.join(f['${index_col}'].values[10:]))"); 
 do   
   cylc install . --run-name=${fullname}
-  cylc play sampled-examples/${fullname} $(python template.py ${datafile} ${index_col} ${fullname}); 
+  cylc play sampled-examples/${fullname} $(pipx run template.py ${datafile} ${index_col} ${fullname}); 
 done
 
 cylc tui
