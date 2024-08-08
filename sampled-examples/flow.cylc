@@ -3,7 +3,7 @@
     allow implicit tasks = True
 
 [task parameters]
-    satellite = aqua
+    satellite = {{ SATELLITES | join(", ")}}
 
 [scheduling]
     initial cycle point = 2006-05-04
@@ -24,7 +24,7 @@
             limit = 2
             members = preprocess<satellite>
         [[[q_load]]]
-            limit = 2
+            limit = 1
             members = load<satellite>
 
 [runtime]
