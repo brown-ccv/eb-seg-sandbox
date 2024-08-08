@@ -1,5 +1,7 @@
 ## Rose
 
+Installation:
+
 ```bash
 pipx install cylc-rose  # this will install cylc and rose
 pipx install uv  # required for faster setup
