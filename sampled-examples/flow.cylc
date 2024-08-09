@@ -47,9 +47,8 @@
     [[<satellite>]]
         [[[environment]]]
             SATELLITE=${CYLC_TASK_PARAM_satellite}
-            IMGDIR=$CYLC_WORKFLOW_SHARE_DIR/data/
-            IMGPREFIX=${LOCATION}-${DATE}-${SATELLITE}
-            PREPROCESSDIR=$CYLC_WORKFLOW_SHARE_DIR/data/${IMGPREFIX}-output
+            IMGDIR=${CYLC_WORKFLOW_SHARE_DIR}/${LOCATION}-${DATE}-${SATELLITE}/
+            PREPROCESSDIR=${IMGDIR}
 
     [[load<satellite>]]
         inherit = <satellite>
@@ -58,21 +57,21 @@
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-cloud<satellite>]]
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-land<satellite>]]
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}-land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
+            ${FSDPROC} load ${IMGDIR}/land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
         """
 
     [[preprocess<satellite>]]
@@ -80,8 +79,8 @@
         script = """
         mkdir -p "$PREPROCESSDIR"
         ${FSDPROC} process \
-            "${IMGDIR}/${IMGPREFIX}-truecolor.tiff" \
-            "${IMGDIR}/${IMGPREFIX}-cloud.tiff" \
-            "${IMGDIR}/${IMGPREFIX}-land.tiff" \
+            "${IMGDIR}/truecolor.tiff" \
+            "${IMGDIR}/cloud.tiff" \
+            "${IMGDIR}/land.tiff" \
             "${PREPROCESSDIR}"
         """
