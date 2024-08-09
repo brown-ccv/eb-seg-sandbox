@@ -17,7 +17,8 @@
 
         P1D = """
             setup[^] => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
-            load<satellite>:succeed-all => preprocess<satellite>
+            load<satellite>:succeed-all => preprocess<satellite>?
+            preprocess<satellite>:finish => get-preprocess-logs<satellite>
         """
 
     [[queues]]
@@ -49,6 +50,7 @@
             SATELLITE=${CYLC_TASK_PARAM_satellite}
             IMGDIR=${CYLC_WORKFLOW_SHARE_DIR}/${LOCATION}-${DATE}-${SATELLITE}/
             PREPROCESSDIR=${IMGDIR}
+            IMGPREFIX=_img-
 
     [[load<satellite>]]
         inherit = <satellite>
@@ -57,21 +59,21 @@
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-cloud<satellite>]]
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
         """
 
     [[load-land<satellite>]]
         inherit = load<satellite>
         script = """
             mkdir -p "$IMGDIR"
-            ${FSDPROC} load ${IMGDIR}/land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
+            ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
         """
 
     [[preprocess<satellite>]]
@@ -79,8 +81,15 @@
         script = """
         mkdir -p "$PREPROCESSDIR"
         ${FSDPROC} process \
-            "${IMGDIR}/truecolor.tiff" \
-            "${IMGDIR}/cloud.tiff" \
-            "${IMGDIR}/land.tiff" \
+            "${IMGDIR}/${IMGPREFIX}truecolor.tiff" \
+            "${IMGDIR}/${IMGPREFIX}cloud.tiff" \
+            "${IMGDIR}/${IMGPREFIX}land.tiff" \
             "${PREPROCESSDIR}"
+        """
+
+    [[get-preprocess-logs<satellite>]]
+        inherit = <satellite>
+        script = """
+            mkdir ${IMGDIR}/preprocess-logs
+            cp ${CYLC_WORKFLOW_RUN_DIR}/log/job/${CYLC_TASK_CYCLE_POINT}/preprocess_${SATELLITE}/NN/* ${IMGDIR}/preprocess-logs/.
         """
