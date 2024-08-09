@@ -18,7 +18,7 @@
         P1D = """
             setup[^] => load-truecolor<satellite> & load-cloud<satellite> & load-land<satellite>
             load<satellite>:succeed-all => preprocess<satellite>?
-            preprocess<satellite>:finish => get-preprocess-logs<satellite>
+            preprocess<satellite>:finish => preprocess-get-logs<satellite>
         """
 
     [[queues]]
@@ -57,6 +57,7 @@
 
     [[load-truecolor<satellite>]]
         inherit = load<satellite>
+        execution retry delays = PT15S, PT10M, PT30M, PT1H
         script = """
             mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}truecolor.tiff --kind truecolor --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
@@ -64,6 +65,7 @@
 
     [[load-cloud<satellite>]]
         inherit = load<satellite>
+        execution retry delays = PT15S, PT10M, PT30M, PT1H
         script = """
             mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}cloud.tiff --kind cloud --datetime ${DATE} --bbox "${BBOX}" --satellite "${SATELLITE}"
@@ -71,6 +73,7 @@
 
     [[load-land<satellite>]]
         inherit = load<satellite>
+        execution retry delays = PT15S, PT10M, PT30M, PT1H
         script = """
             mkdir -p "$IMGDIR"
             ${FSDPROC} load ${IMGDIR}/${IMGPREFIX}land.tiff --kind landmask --datetime ${DATE} --bbox "$BBOX"  --no-validate
@@ -87,7 +90,7 @@
             "${PREPROCESSDIR}"
         """
 
-    [[get-preprocess-logs<satellite>]]
+    [[preprocess-get-logs<satellite>]]
         inherit = <satellite>
         script = """
             mkdir ${IMGDIR}/preprocess-logs
