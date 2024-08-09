@@ -46,13 +46,27 @@ cylc tui sampled-examples
 cylc stop sampled-examples/*;
 cylc clean sampled-examples
 
+```
+
+```bash
 datafile="all-cases.csv"
 index_col="fullname"
-for fullname in $(pipx run util/get_fullnames.py "${datafile}" "${index_col}" --start 100); 
+for fullname in $(pipx run util/get_fullnames.py "${datafile}" "${index_col}" --start 50); 
 do   
   cylc install . --run-name=${fullname}
   cylc play sampled-examples/${fullname} $(pipx run util/template.py ${datafile} ${index_col} ${fullname}); 
 done
 
 cylc tui
+```
+
+Copy all the output files to the /output directory
+```bash
+rundir="${HOME}/cylc-run/sampled-examples"
+for dir in ${rundir}/*/share/*/
+do
+  echo $dir
+  cp -r $dir output/
+  sleep 0.1
+done
 ```
