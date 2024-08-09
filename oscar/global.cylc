@@ -1,6 +1,3 @@
 [platforms]
-    [[oscar]]
-        hosts = localhost
-        install target = localhost
+    [[localhost]]
         job runner = slurm
-        retrieve job logs = True
